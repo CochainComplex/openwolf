@@ -184,11 +184,13 @@ function readSessionJSON(directory: string, sid: string): Record<string, unknown
 }
 
 function pathEntryMatches(entry: unknown, candidate: string): boolean {
-  if (typeof entry === "string") return entry === candidate
+  // Session ledger keys use forward slashes on every platform.
+  const ledgerPath = candidate.replace(/\\/g, "/")
+  if (typeof entry === "string") return entry === ledgerPath
   if (entry !== null && typeof entry === "object") {
     const obj = entry as Record<string, unknown>
     for (const key of ["path", "filePath", "file_path", "file"]) {
-      if (typeof obj[key] === "string" && obj[key] === candidate) return true
+      if (typeof obj[key] === "string" && obj[key] === ledgerPath) return true
     }
   }
   return false
@@ -672,7 +674,7 @@ test("read tracking uses the raw file text, not the decorated tool output", asyn
       const sid = "ses-raw"
       await toolHooks.get("execute.after")!({ tool: "read", sessionID: sid, id: "r1", status: "completed", input: { path: "a.ts" },
         result: { output: { type: "file", content }, content: [{ type: "text", text: "Read file a.ts, lines 1-1\n1: export const a = 1" }] } })
-      const entry = (readSessionJSON(dir, sid)?.files_read as Record<string, any> | undefined)?.[file]
+      const entry = (readSessionJSON(dir, sid)?.files_read as Record<string, any> | undefined)?.[file.replace(/\\/g, "/")]
       assert.ok(entry, "read must be recorded")
       // the fingerprint is only set when the recorded text equals the file on disk
       assert.equal(typeof entry.read_hash, "string", "raw text must match the file so the read is fingerprinted")

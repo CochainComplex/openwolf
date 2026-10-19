@@ -111,6 +111,12 @@
     "visibility": {"mode": "quiet"},
     "updates": {
       "mode": "compatible"
+    },
+    "task_review": {
+      "enabled": false,
+      "failure_threshold": 2,
+      "interval_minutes": 5,
+      "cooldown_minutes": 5
     }
   }
 }

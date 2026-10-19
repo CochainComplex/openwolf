@@ -8,6 +8,7 @@
 - Allow 15 seconds for SessionStart; cache dependency checks and move session cleanup off the blocking path.
 - Archive retired AI cron definitions and catch up supported maintenance once after suspend/restart.
 - Correct memory instructions and dashboard wording; update untouched project skills and make reframe self-contained.
+- Offer optional task review nudges after repeated reported failures or elapsed active time, without blocking or terminating tasks.
 - Contributor authorship, reports, exclusions and validation limits: [October audit](docs/audit/october-2026.md).
 
 

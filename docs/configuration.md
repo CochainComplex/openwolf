@@ -100,3 +100,9 @@ The daemon persists the next due time for each schedule and checks overdue maint
 Catch-up coverage begins when the new scheduler first records its cursor; it does not infer missed runs from old, incomplete execution logs. Claims are persisted before execution: a process crash between claim and execution can skip that attempt, rather than executing a potentially completed action twice. Existing retry policy handles reported action failures. This is bounded maintenance recovery, not an exactly-once distributed scheduler.
 
 Init/update move retired `ai_task` definitions to `retired_tasks`, with `enabled: false`, preserving their parameters. They are never scheduled or restored as model calls. Restart the daemon after changing its manifest or watcher exclusions.
+
+## Optional task review suggestions
+
+Set `openwolf.task_review.enabled` to `true` to enable advisory context for Claude and Codex hooks (default: `false`). Two consecutive reported command failures or five minutes between active task events can prompt a brief review of the current evidence and approach. The agent can continue unchanged: these suggestions never deny a tool, terminate a task, require approval, or launch an extra model turn.
+
+`failure_threshold` defaults to `2`, `interval_minutes` to `5`, and `cooldown_minutes` to `5`. Only commands with a stable tool ID and an explicit numeric exit status count; duplicate deliveries and unknown outcomes do not. A successful command clears the failure count. Elapsed time is observed at hook events, excluding waiting between a Stop event and the next user prompt; it is not a background deadline. Pending suggestions are delivered through the next supported Bash or user-prompt context response. An explicit handoff objective change resets the task; otherwise the scope is the current session. OpenCode does not yet emit these suggestions.

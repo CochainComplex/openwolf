@@ -27,7 +27,7 @@ The retrospective describes one customized project, not a controlled comparison 
 
 Adopt selective retrieval, compact current handoffs, explicit disable semantics, substantive rather than quota-driven learning, and tests that exercise the real integration boundary. Direct search is a valid first choice. Historical hook observations must not be presented as current passing tests or authorization.
 
-Do not import the project's application-specific database locks, payment tests, design contracts, QA wrapper or progress system into OpenWolf. Do not make a two-failure/five-minute execution veto a universal rule, and do not disable every installation's automation by default. Do not claim net token savings, cost savings or causal productivity improvement from unmatched ledger categories. The private retrospective and its application records are excluded from Git and the package.
+Do not import the project's application-specific database locks, payment tests, design contracts, QA wrapper or progress system into OpenWolf. The Casepod two-failure/five-minute idea is supported only as an opt-in advisory review suggestion for Claude/Codex, following the maintainer’s clarification: no blocking, termination or approval requirement. Do not make it an execution veto, and do not disable every installation's automation by default. Do not claim net token savings, cost savings or causal productivity improvement from unmatched ledger categories. The private retrospective and its application records are excluded from Git and the package.
 
 ## Deferred or excluded
 
@@ -50,8 +50,8 @@ A process-reaping race in an existing daemon test was corrected to await child e
 ### Local verification on 19 October
 
 - `pnpm build`: passed, including plugin and dashboard type checks.
-- `pnpm test`: 361 passed, zero failed/skipped. After extending exact legacy plugin fingerprints, all five adapter checks and the packaged upgrade smoke passed again.
-- `scripts/release-smoke.mjs`: packed installation, actual published 2.5.1 upgrade, preserved custom status/memory, authenticated dashboard and daemon restart passed (334 packaged files).
+- `pnpm test`: 365 passed, zero failed/skipped, including advisory-only task review and portable V2 ledger assertions.
+- `scripts/release-smoke.mjs`: packed installation, actual published 2.5.1 upgrade, preserved custom status/memory, authenticated dashboard and daemon restart passed.
 - Minimal startup fixture: ten macOS/Node 24.14.1 executions, updates disabled, 28–31 ms (median 29 ms). This is not a representative Windows project benchmark or a before/after savings result.
 
 Cross-platform GitHub CI status is attached to the PR; native V2 availability remains as described above.
