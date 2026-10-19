@@ -10,7 +10,7 @@ openwolf operations doctor
 
 ## A documented command is missing
 
-These pages describe the 2.5.3 release candidate. Compare your installed version with the [npm package](https://www.npmjs.com/package/openwolf) and [release record](release-2.5.3.md). Older installations may not include all commands described here.
+These pages describe the 2.5.3 release. Compare your installed version with the [npm package](https://www.npmjs.com/package/openwolf) and [release record](release-2.5.3.md). Older installations may not include all commands described here.
 
 ## Hooks are not running
 

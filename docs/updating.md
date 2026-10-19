@@ -12,7 +12,7 @@ openwolf update --dry-run
 openwolf update
 ```
 
-This installs the version currently published on npm. OpenWolf 2.5.2 is available on [npm](https://www.npmjs.com/package/openwolf/v/2.5.2), with [release notes on GitHub](https://github.com/cytostack/openwolf/releases/tag/v2.5.2).
+Install OpenWolf 2.5.3 with `npm install -g openwolf@2.5.3`. See the [2.5.3 release notes](release-2.5.3.md) for changes and validation.
 
 `openwolf update` refreshes registered projects from the installed package. Use `--project my-app` to select a project by partial name. Review the dry run before updating several projects.
 
@@ -58,7 +58,7 @@ Protected administrator-managed runtimes have a separate update process. Project
 
 ## Upgrading to 2.5.3
 
-Version 2.5.3 is a release candidate, not yet published. The commands above install the currently published version. After 2.5.3 is released, verify `openwolf --version`, run `openwolf update --dry-run`, then update the intended projects. Restart each project's daemon with `openwolf daemon restart` and start new agent sessions. The dashboard's System page distinguishes the running daemon version from the installed project hooks.
+After installing 2.5.3, verify `openwolf --version`, run `openwolf update --dry-run`, then update the intended projects. Restart each project's daemon with `openwolf daemon restart` and start new agent sessions. The dashboard's System page distinguishes the running daemon version from the installed project hooks.
 
 Updates preserve disabled projects. Retired AI schedule entries move to `retired_tasks` with their definitions intact. Catch-up applies to supported maintenance after its first stored due time; it does not replay all historical missed runs. Custom OpenCode plugin edits are preserved and may require manual migration. Do not delete custom files to silence a migration warning.
 

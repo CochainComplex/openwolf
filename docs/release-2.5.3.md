@@ -1,6 +1,6 @@
 # OpenWolf 2.5.3 release record
 
-**Status: release candidate. Not yet published.** The latest published package remains 2.5.2 until the release is completed. This page describes the candidate in [PR #140](https://github.com/cytostack/openwolf/pull/140).
+OpenWolf 2.5.3 improves daemon reliability, Windows execution, OpenCode V2 support and the dashboard. Implementation and contributor records are in [PR #140](https://github.com/cytostack/openwolf/pull/140).
 
 ## Changes
 
