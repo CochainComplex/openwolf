@@ -1,17 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-const example = ref<HTMLElement | null>(null);
-const examplePlaying = ref(false);
-const replay = ref(0);
-let exampleObserver: IntersectionObserver | undefined;
-onMounted(() => {
-  if (!example.value) return;
-  exampleObserver = new IntersectionObserver(([entry]) => {
-    if (entry.isIntersecting) { examplePlaying.value = true; exampleObserver?.disconnect(); }
-  }, { threshold: 0.2 });
-  exampleObserver.observe(example.value);
-});
-onBeforeUnmount(() => exampleObserver?.disconnect());
+import { ref } from 'vue';
+import TerminalExample from './TerminalExample.vue';
 const copied=ref(false);
 async function copyInstall(){try{await navigator.clipboard.writeText('npm install -g openwolf');copied.value=true;setTimeout(()=>copied.value=false,2000)}catch{copied.value=false}}
 const contributors=['itdove','CochainComplex','davdittrich','CBenadieBHC','Noboxer','citizenshanegit','Jezzaw56','eram','aethyron','marrahi','alfasin','liveoakwag','pereirajo','lojasmm-jonathan','smasoftware','goashem','AdarshJ173','oiahoon','lshgdut','ChasLui','nottyjay','kantorcodes'];
@@ -27,22 +16,9 @@ const contributors=['itdove','CochainComplex','davdittrich','CBenadieBHC','Nobox
       <p class="release">Version 2.5.3 · <a href="/release-2.5.3">See the changes and test results</a></p>
     </section>
 
-    <section ref="example" class="example" aria-label="Example project notes">
-      <div><p class="eyebrow">A simple example</p><h2>Start a new session<br>with a useful next step.</h2><p>Your last session ended halfway through a change. Instead of explaining everything again, you can give your assistant a short saved note and let it check the current files.</p></div>
-      <div class="example-demo">
-        <div :key="replay" class="note" :class="{ 'example-playing': examplePlaying }">
-          <span class="note-label">Illustrated example · Checkout form</span>
-          <h3>A saved note for the next session</h3>
-          <dl>
-            <div class="note-row" style="--step:0"><dt>Task</dt><dd>Add an address field.</dd></div>
-            <div class="note-row" style="--step:1"><dt>Completed</dt><dd>The form and validation are updated.</dd></div>
-            <div class="note-row" style="--step:2"><dt>Check first</dt><dd>The tests have not been run yet.</dd></div>
-            <div class="note-row note-next" style="--step:3"><dt>Next step</dt><dd>Test an order with an incomplete address.</dd></div>
-          </dl>
-          <p class="example-ready">New session: continue from the saved next step.</p>
-        </div>
-        <button class="example-replay" @click="examplePlaying = true; replay++" aria-label="Replay the saved-note example">Replay example <span aria-hidden="true">↻</span></button>
-      </div>
+    <section class="example" aria-label="Example project notes">
+      <div><p class="eyebrow">A simple example</p><h2>Start a new session<br>with a useful next step.</h2><p>Find the relevant code, save what is done and update the next step as work progresses. Your next session can use those notes and check the current files before continuing.</p></div>
+      <TerminalExample />
     </section>
 
     <section class="section" aria-labelledby="helps-title">
@@ -99,8 +75,4 @@ openwolf dashboard</code></pre><p>Install OpenWolf, choose your assistant and op
 .intro{padding:90px 0 64px;max-width:900px}.eyebrow{font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--vp-c-text-2);margin:0 0 18px}
 h1{font-size:clamp(36px,5.5vw,66px);line-height:1.12;letter-spacing:-.035em;font-weight:650;margin:0 0 24px}h2{font-size:clamp(26px,3vw,38px);line-height:1.2;letter-spacing:-.02em;font-weight:600;margin:0 0 22px}h3{font-size:20px;font-weight:600;margin:0 0 8px}.lead{font-size:20px;line-height:1.6;max-width:730px;color:var(--vp-c-text-2)}p{margin:0 0 18px}.links{display:flex;gap:28px;align-items:center;flex-wrap:wrap;margin:30px 0 22px}.links .primary{background:var(--vp-c-brand-1);color:var(--vp-c-bg);padding:11px 20px;border-radius:5px;text-decoration:none;font-weight:600}.release,.small{font-size:14px;color:var(--vp-c-text-2)}.section{padding:60px 0;border-top:1px solid var(--vp-c-divider)}.example,.split{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start}.example{background:var(--vp-c-bg-alt);padding:36px;border:1px solid var(--vp-c-divider);border-radius:8px;margin-bottom:60px}.example p,.prose p,.feature-list p{color:var(--vp-c-text-2)}.note{background:var(--vp-c-bg);padding:26px;border:1px solid var(--vp-c-divider);border-radius:5px}.note-label{display:block;font-size:12px;color:var(--vp-c-text-2);margin-bottom:18px}.note dl{display:grid;gap:12px;font-size:14px}.note-row{display:grid;grid-template-columns:100px minmax(0,1fr);gap:12px}.note dt{font-weight:600}.note dd{margin:0}.feature-list{display:grid;grid-template-columns:1fr 1fr;gap:30px 50px;margin-top:35px}.feature-list article{display:flex;gap:20px}.feature-list article>span{font-family:var(--vp-font-family-mono);color:var(--vp-c-text-2);font-size:13px;padding-top:4px}.commands{border:1px solid var(--vp-c-divider);border-radius:6px;overflow:hidden;background:var(--vp-c-bg-alt)}.command-heading{display:flex;justify-content:space-between;padding:12px 20px;border-bottom:1px solid var(--vp-c-divider);font-size:13px}.command-heading button{cursor:pointer;text-decoration:underline}.commands pre{font-size:15px;line-height:2;padding:20px;overflow:auto}.commands p{font-size:13px;padding:0 20px;color:var(--vp-c-text-2)}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:15px}th,td{text-align:left;padding:18px 12px;border-bottom:1px solid var(--vp-c-divider);vertical-align:top}th{font-weight:600}td:first-child{width:180px;font-weight:500}.small{margin-top:16px}.release-list{padding-left:20px;list-style:disc;margin:20px 0}.release-list li{margin:10px 0}.contributors>p{max-width:720px;color:var(--vp-c-text-2)}.contributors ul{display:flex;flex-wrap:wrap;gap:8px 22px;list-style:none;padding:0;margin:26px 0;font-size:14px}footer{border-top:1px solid var(--vp-c-divider);padding:26px 0 40px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--vp-c-text-2)}footer div{display:flex;gap:24px}a:focus-visible,button:focus-visible{outline:2px solid var(--vp-c-brand-1);outline-offset:5px}
 @media(max-width:720px){.ow-home{padding:0 22px}.intro{padding-top:48px}.lead{font-size:18px}.example,.split,.feature-list{grid-template-columns:1fr;gap:26px}.example{padding:24px;margin-bottom:40px}.section{padding:38px 0}.note-row{grid-template-columns:85px minmax(0,1fr)}.links{gap:18px}td:first-child{width:110px}}
-.example-demo{min-width:0}.note-next{border-top:1px solid var(--vp-c-divider);padding-top:14px}.example-ready{margin:20px 0 0;padding:12px;border-left:3px solid var(--vp-c-brand-1);background:var(--vp-c-bg-alt);font-size:13px}.example-replay{display:flex;align-items:center;gap:8px;min-height:44px;margin-top:8px;padding:6px 0;color:var(--vp-c-brand-1);font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:4px}.example-playing .note-row{animation:note-arrive .5s ease both;animation-delay:calc(var(--step) * .55s)}.example-playing .example-ready{animation:note-arrive .5s ease 2.3s both}
-@keyframes note-arrive{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@media(prefers-reduced-motion:reduce){.example-playing .note-row,.example-playing .example-ready{animation:none}.example-replay{display:none}}
-@media(max-width:420px){.note{padding:20px}.note-row{grid-template-columns:1fr;gap:3px}.example{padding:20px}.note h3{font-size:18px}}
 </style>
