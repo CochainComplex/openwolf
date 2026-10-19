@@ -50,7 +50,7 @@ type V2Plugin = {
  */
 function waitWithBackoff(signal: AbortSignal, ms: number): Promise<void> {
   return new Promise(resolve => {
-    const timer = setTimeout(resolve, ms)
+    const timer = setTimeout(() => {signal.removeEventListener("abort", onAbort);resolve()}, ms)
     const timeout = timer as { unref?: () => void }
     if (typeof timeout.unref === "function") timeout.unref()
     const onAbort = () => {
@@ -72,7 +72,7 @@ function waitWithBackoff(signal: AbortSignal, ms: number): Promise<void> {
  */
 export async function setupOpenWolfV2(ctx: V2Context): Promise<(() => void) | void> {
   const directory = ctx.location.directory
-  if (!wolfDirExists(directory)) return
+  if (!wolfDirExists(directory)) return () => {}
   const sessionKey = `opencode-server:${process.pid}:${Date.now()}`
   scheduleUpdate(directory)
 

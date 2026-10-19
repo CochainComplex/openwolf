@@ -86,3 +86,17 @@ Update modes are `compatible`, `all`, `notify` and `off`. The default prepares c
 The dashboard is enabled by default and binds to `127.0.0.1`. Port settings are `dashboard.port` and `daemon.port`; setup and launch can select available project ports. Keep the project token private.
 
 `cron.enabled` controls scheduled tasks. Retry and heartbeat settings are in `cron`. Restart the daemon after changes that affect its runtime configuration. Data polling does not apply every configuration change to a running process.
+
+## Disabled projects and selective memory
+
+Set `openwolf.enabled` to `false` for a manual-memory project. Cached hook calls exit silently before reading stdin, selecting runtimes, or writing bookkeeping. OpenCode dispatch also honors the setting. `openwolf init` and `openwolf update` skip disabled projects, preserving their configuration and instructions; explicitly re-enable the project before reinstalling. Stop any already-running daemon when changing this setting; a newly started daemon exits without starting background work. Static module imports still run before the hook guard, and already-injected conversation context cannot be withdrawn.
+
+Anatomy lookup is optional. Use direct search when the index is stale or unhelpful. Keep current handoffs compact and retrieve detailed evidence on demand. Hook observations are historical records, not proof that tests still pass after later edits.
+
+## Maintenance after suspend
+
+The daemon persists the next due time for each schedule and checks overdue maintenance every 30 seconds and on startup. `scan_project`, `consolidate_memory` and `generate_token_report` catch up once; missed occurrences are not replayed individually. Set `catch_up: false` on a task in `cron-manifest.json` to disable catch-up. Disabled tasks remain disabled. A changed schedule starts a new cursor.
+
+Catch-up coverage begins when the new scheduler first records its cursor; it does not infer missed runs from old, incomplete execution logs. Claims are persisted before execution: a process crash between claim and execution can skip that attempt, rather than executing a potentially completed action twice. Existing retry policy handles reported action failures. This is bounded maintenance recovery, not an exactly-once distributed scheduler.
+
+Init/update move retired `ai_task` definitions to `retired_tasks`, with `enabled: false`, preserving their parameters. They are never scheduled or restored as model calls. Restart the daemon after changing its manifest or watcher exclusions.

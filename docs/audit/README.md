@@ -88,3 +88,7 @@ Names below are taken verbatim from Co-authored-by trailers; they are not inferr
 - [PR #69](https://github.com/cytostack/openwolf/pull/69): Claude Opus 5 (1M context)
 - [PR #35](https://github.com/cytostack/openwolf/pull/35): Claude, Claude Opus 4.7
 - [PR #26](https://github.com/cytostack/openwolf/pull/26): Claude Opus 4.7 (1M context)
+
+## October follow-up
+
+See the [19 October reliability review](october-2026.md) for newly reported failures, contributor attribution, Casepod workflow lessons, accepted repairs and explicitly deferred proposals. The September tables above remain a historical snapshot.

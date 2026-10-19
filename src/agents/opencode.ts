@@ -114,31 +114,88 @@ function existingManagedApi(projectRoot: string): Exclude<OpenCodePluginApi, "un
 
 // Original 2.5.2 templates, before the V2 adapter refactor. Markers alone do not
 // establish ownership: user additions and edits must survive migration.
-const legacyHashes: Record<string, string> = {
-  "anatomy-lock.ts": "998d72e3fe13949e9c0cb30d275a42c2da896773cc564184abe67ccd2690438d",
-  "anatomy.ts": "68addd8ae1c5527426c3f654f903956e8be56332e0c5bfb95e708373e735f29c",
-  "bug-id.ts": "4c8772b6899a94db1f998056f0e9680ecf8b592bcc294905c0b726f44454f9b6",
-  "bug-journal.ts": "7ffd6abb2a99cb6477efdfa429e25f352c612e51ef91a6c677b92f43f552e892",
-  "event-journal.ts": "505d5d1a9855a99291d2b8fff9df081fb1cdeac6de8183735903faff39e9e6da",
-  "fs.ts": "f5515d0adeb489c77c8b98ce478c11ac52a15506f1cba5ebbc9d6da8e86f54b5",
-  "handoff-state.ts": "e89e3d8060eb8715937f2448dd5e895bf89effaea2b4a95cef5cb8af686c29c6",
-  "index.ts": "d312f7bdd87b8aa04a1bf1c822caffa4ffed362dd365641a6ecf99701536fc13",
-  "knowledge-root.ts": "01ef8c298eff625282f0ca80c2538703d46fce29b9d5029b10eb320fb4f7c7cb",
-  "ledger-math.ts": "15a6f20f592a1694658e14741574b320221d2bb9d88af76bcf82b887d1dfd014",
-  "ledger.ts": "40fe54b26bd7065997d9b9b4dc8c2f53d99f9781c78899f49aebe4a0de21faba",
-  "post-read.ts": "3bfccf7da293fc8f35def36fe446f228b2509fed142160af5ee8e7784d560c1b",
-  "post-write.ts": "5bb61950f1e74467780f94e5d586ba35113c3197a75ca641edbde7a11a99114b",
-  "pre-read.ts": "afed8a27faa0e84b52fdab6b54f4b801dc4b7d4f2efaf21b3eba8a4e0caa342f",
-  "pre-write.ts": "4453d71e2fc603d5736ac93dd06e68d8e443b39c4422f5942c75e44da936e25f",
-  "runtime-updates.ts": "e607034a2576f087f806d37ab97d22b14cfb37837288955d89e5e039e0796c46",
-  "session-state.ts": "840f6a1f167ef5d2050ae0acd38b79086392d664ce5a7193107ccec844a4c72b",
-  "session.ts": "1f01e2c9cbf01c544c7959e5a4d84b01348145e27f8e6c3328771dee32837f43",
-  "shared.ts": "d206d1cd15ed2555b96c1e67570af63dc56c5cfd3404bcd4f7cae3add2642542",
-  "stop.ts": "19733cf87e9438f8ffbbe8c1ae97c2b338906cff1846e3263e8aa53290c55cb8",
-  "trusted-memory.ts": "95ece522e731bc7fc263f3d2585f86744dffff12aa848f81a8f28691443450ee",
-  "types.ts": "d1a2f07045779a587a562be7f3d19794bfc3af7a0255a9b3bb3d53af0f86c9dc",
-  "usage.ts": "974f4668ef8b450e8534a9268b61b021927c380a1f3d8f9faf1ef6ab055923ed",
-  "visibility.ts": "6bb8d7f2213ff38c189860422072f15f3addc6206927f4fd30f79ee63fe0803d"
+const legacyHashes: Record<string, string[]> = {
+  "anatomy-lock.ts": [
+    "998d72e3fe13949e9c0cb30d275a42c2da896773cc564184abe67ccd2690438d"
+  ],
+  "anatomy.ts": [
+    "68addd8ae1c5527426c3f654f903956e8be56332e0c5bfb95e708373e735f29c"
+  ],
+  "bug-id.ts": [
+    "4c8772b6899a94db1f998056f0e9680ecf8b592bcc294905c0b726f44454f9b6"
+  ],
+  "bug-journal.ts": [
+    "7ffd6abb2a99cb6477efdfa429e25f352c612e51ef91a6c677b92f43f552e892"
+  ],
+  "event-journal.ts": [
+    "505d5d1a9855a99291d2b8fff9df081fb1cdeac6de8183735903faff39e9e6da"
+  ],
+  "fs.ts": [
+    "f5515d0adeb489c77c8b98ce478c11ac52a15506f1cba5ebbc9d6da8e86f54b5",
+    "a3d5150a3136e25b309425e84421ff5a5494f9be2e35b22a2116fb84b2ca3858"
+  ],
+  "handoff-state.ts": [
+    "e89e3d8060eb8715937f2448dd5e895bf89effaea2b4a95cef5cb8af686c29c6"
+  ],
+  "index.ts": [
+    "d312f7bdd87b8aa04a1bf1c822caffa4ffed362dd365641a6ecf99701536fc13",
+    "3893b055d3f93fca8816fc81d03d9a52baec1a0a5e6462d80bc95060a689a8dd"
+  ],
+  "knowledge-root.ts": [
+    "01ef8c298eff625282f0ca80c2538703d46fce29b9d5029b10eb320fb4f7c7cb"
+  ],
+  "ledger-math.ts": [
+    "15a6f20f592a1694658e14741574b320221d2bb9d88af76bcf82b887d1dfd014"
+  ],
+  "ledger.ts": [
+    "40fe54b26bd7065997d9b9b4dc8c2f53d99f9781c78899f49aebe4a0de21faba"
+  ],
+  "post-read.ts": [
+    "3bfccf7da293fc8f35def36fe446f228b2509fed142160af5ee8e7784d560c1b",
+    "bd1337591aba02800e4f4f6fb10b07f9e75ac5bcf8ea26ce84a5dd4709ff0700"
+  ],
+  "post-write.ts": [
+    "5bb61950f1e74467780f94e5d586ba35113c3197a75ca641edbde7a11a99114b",
+    "cf1a2f9faa368d6dc0e95327397296b9e6376108acc04d6b15f958aa781f8abf"
+  ],
+  "pre-read.ts": [
+    "afed8a27faa0e84b52fdab6b54f4b801dc4b7d4f2efaf21b3eba8a4e0caa342f",
+    "ae27be3842d1245064d09f40d2149f42e7fae52fef27a4e10c65d7b416f07e27"
+  ],
+  "pre-write.ts": [
+    "4453d71e2fc603d5736ac93dd06e68d8e443b39c4422f5942c75e44da936e25f",
+    "c3b34d216601e76fe11e64a418583cac39a2797d734bc4f92f76882c5f8d1b0b"
+  ],
+  "runtime-updates.ts": [
+    "e607034a2576f087f806d37ab97d22b14cfb37837288955d89e5e039e0796c46"
+  ],
+  "session-state.ts": [
+    "840f6a1f167ef5d2050ae0acd38b79086392d664ce5a7193107ccec844a4c72b"
+  ],
+  "session.ts": [
+    "1f01e2c9cbf01c544c7959e5a4d84b01348145e27f8e6c3328771dee32837f43",
+    "ccfc559bd4a86f6156e67b76785ff8801c3f465d997c2aff1d8cd043a6a06add"
+  ],
+  "shared.ts": [
+    "d206d1cd15ed2555b96c1e67570af63dc56c5cfd3404bcd4f7cae3add2642542"
+  ],
+  "stop.ts": [
+    "19733cf87e9438f8ffbbe8c1ae97c2b338906cff1846e3263e8aa53290c55cb8",
+    "d5217ba63b6ec1a2d75c8ba08a6decb454a74c8dfb001e15b938518162cbb516"
+  ],
+  "trusted-memory.ts": [
+    "95ece522e731bc7fc263f3d2585f86744dffff12aa848f81a8f28691443450ee"
+  ],
+  "types.ts": [
+    "d1a2f07045779a587a562be7f3d19794bfc3af7a0255a9b3bb3d53af0f86c9dc",
+    "c14c76f714e5d56a759e5e45f51b34b1fbd6e0b0fbb58ef5b4cca406725b28ab"
+  ],
+  "usage.ts": [
+    "974f4668ef8b450e8534a9268b61b021927c380a1f3d8f9faf1ef6ab055923ed"
+  ],
+  "visibility.ts": [
+    "6bb8d7f2213ff38c189860422072f15f3addc6206927f4fd30f79ee63fe0803d"
+  ]
 };
 const digest = (file: string) => createHash('sha256').update(fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n')).digest('hex');
 function removableFiles(target: string, source: string): string[] {
@@ -151,7 +208,7 @@ function removableFiles(target: string, source: string): string[] {
       if (!fs.lstatSync(file).isFile()) throw new Error(`Unrecognized plugin content: ${file}`);
       const hash = digest(file);
       const candidates = [path.join(source, name), ...(name === 'index.ts' ? [path.join(source, 'index-v2.ts')] : [])];
-      if (hash !== legacyHashes[name] && !candidates.some(candidate => fs.existsSync(candidate) && digest(candidate) === hash)) {
+      if (!legacyHashes[name]?.includes(hash) && !candidates.some(candidate => fs.existsSync(candidate) && digest(candidate) === hash)) {
         throw new Error(`Customized plugin file: ${file}`);
       }
       files.push(file);
@@ -159,7 +216,7 @@ function removableFiles(target: string, source: string): string[] {
     return files;
   }
   const contents = fs.readFileSync(target, 'utf8').replace(/\r\n/g, '\n');
-  if (contents !== ENTRY && contents !== LEGACY_ENTRY && contents !== 'export { OpenWolf } from "./openwolf/index.js"\n') throw new Error(`Customized plugin entry: ${target}`);
+  if (digest(target) !== "a29f91aadb9a324d592e71e2775689ab4cc90a9813fbd82daf687af4efaf5342" && contents !== ENTRY && contents !== LEGACY_ENTRY && contents !== 'export { OpenWolf } from "./openwolf/index.js"\n') throw new Error(`Customized plugin entry: ${target}`);
   return [target];
 }
 function removeOtherApiPlugins(projectRoot: string, api: OpenCodePluginApi, source: string): void {
@@ -221,6 +278,9 @@ export function installOpenCodePlugin(
     return {actions, warnings};
   }
   try {
+    const destination=path.join(ctx.projectRoot,".opencode",selectedApi==="v2"?"plugins":"plugin");
+    removableFiles(path.join(destination,"openwolf"),pluginSrcDir);
+    removableFiles(path.join(destination,"openwolf.ts"),pluginSrcDir);
     removeOtherApiPlugins(ctx.projectRoot, selectedApi, pluginSrcDir);
   } catch (error) {
     warnings.push(`${String(error)}. Existing integration left untouched; review customized files before migrating.`);

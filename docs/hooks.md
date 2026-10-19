@@ -59,3 +59,9 @@ A missing heartbeat can mean that a hook was not installed, was not trusted or w
 Completed operations can create local activity receipts. Claude can show a status-line segment, Codex can show recovery notices, and OpenCode can show toasts. Message limits reduce repetition. Grok and headless sessions retain dashboard history without terminal notices.
 
 Update checks run in a detached worker. Tool hooks do not wait for npm requests or installation. The worker adds background network and disk work, while memory and indexing stay local. Read [session visibility](session-visibility-plan.md) and [automatic updates](automatic-updates.md) for configuration.
+
+### October reliability changes
+
+Claude and Codex SessionStart hooks have a 15-second timeout; ordinary tool hook budgets are unchanged. Hook dependency checks reuse a cache only while installed JavaScript file metadata is unchanged. Old session-file collection runs in a separate background process after startup context is produced. This reduces synchronous maintenance; it is not a guarantee that every machine completes within the timeout.
+
+OpenCode V2 migration preserves customized files. If any old plugin file is unrecognized or edited, installation stops with a warning instead of recursively deleting the directory or installing a second API generation alongside it. Review those files before retrying. V2 usage is recorded per assistant step, including reported failed-step usage; cumulative session totals are not added as separate usage. Missing model attribution remains unknown.

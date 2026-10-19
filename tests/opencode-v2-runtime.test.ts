@@ -14,6 +14,7 @@ const PLUGIN_SRC = path.join(ROOT, "src", "templates", "opencode-plugin")
 const TSC = path.join(ROOT, "node_modules", "typescript", "bin", "tsc")
 let v2Default: any
 let setupOpenWolfV2: any
+let handleOpenCodeEvent: any
 
 before(async () => {
   const outDir = fs.mkdtempSync(path.join(os.tmpdir(), "ow-v2-build-"))
@@ -26,6 +27,7 @@ before(async () => {
   const mod = await import(pathToFileURL(path.join(outDir, "index-v2.js")).href)
   v2Default = mod.default
   setupOpenWolfV2 = mod.setupOpenWolfV2
+  ;({handleOpenCodeEvent}=await import(pathToFileURL(path.join(outDir,"core.js")).href))
 })
 
 // ---------------------------------------------------------------------------
@@ -388,48 +390,16 @@ test("execute.after with status error records nothing", async () => {
   }
 })
 
-test("without a .wolf directory hooks and events are no-ops and never throw", async () => {
-  const project = makeTempProject(false)
+test("without a .wolf directory the plugin starts no subscriptions or hooks", async () => {
+  const project=makeTempProject(false)
   try {
-    const dir = project.dir
-    const { ctx, toolHooks, sessionHooks, events } = makeFakeCtx(dir)
-    const cleanup = await setupOpenWolfV2(ctx)
-    try {
-      const before = toolHooks.get("execute.before")
-      const after = toolHooks.get("execute.after")
-      const context = sessionHooks.get("context")
-      assert.ok(before && after && context, "all three hooks should still be registered")
-
-      await expectNoThrow(
-        () => before({ tool: "read", sessionID: "s1", id: "c1", input: { path: "a.ts" } }),
-        "execute.before"
-      )
-      await expectNoThrow(
-        () =>
-          after({
-            tool: "write",
-            sessionID: "s1",
-            id: "c1",
-            status: "completed",
-            input: { path: "a.ts", content: "hello" },
-            result: { output: { content: "hello" } },
-          }),
-        "execute.after"
-      )
-      await expectNoThrow(() => context({ sessionID: "s1", system: [] }), "session.context")
-
-      events.emit({ id: "e1", created: Date.now(), type: "session.created", data: { sessionID: "s1" } })
-      events.emit({ id: "e2", created: Date.now(), type: "session.execution.succeeded", data: { sessionID: "s1" } })
-      events.emit({ id: "e3", created: Date.now(), type: "session.deleted", data: { sessionID: "s1" } })
-      await sleep(150)
-
-      assert.ok(!fs.existsSync(path.join(dir, ".wolf")), "no .wolf directory should be created")
-    } finally {
-      await cleanup()
-    }
-  } finally {
-    project.cleanup()
-  }
+    const {ctx,toolHooks,sessionHooks}=makeFakeCtx(project.dir)
+    const cleanup=await setupOpenWolfV2(ctx)
+    assert.equal(toolHooks.size,0)
+    assert.equal(sessionHooks.size,0)
+    await cleanup()
+    assert.ok(!fs.existsSync(path.join(project.dir,".wolf")))
+  } finally {project.cleanup()}
 })
 
 test("context hook pushes an openwolf-protocol part when OPENWOLF.md exists and nothing otherwise", async () => {
@@ -712,4 +682,44 @@ test("read tracking uses the raw file text, not the decorated tool output", asyn
   } finally {
     project.cleanup()
   }
+})
+
+test('disabled V2 integration registers no hooks and writes no runtime state',async()=>{
+  const project=makeTempProject(true)
+  try {
+    fs.writeFileSync(path.join(project.dir,'.wolf/config.json'),JSON.stringify({openwolf:{enabled:false}}))
+    const before=fs.readdirSync(path.join(project.dir,'.wolf'))
+    const {ctx,toolHooks,sessionHooks}=makeFakeCtx(project.dir)
+    const cleanup=await setupOpenWolfV2(ctx)
+    assert.equal(toolHooks.size,0);assert.equal(sessionHooks.size,0)
+    await cleanup()
+    assert.deepEqual(fs.readdirSync(path.join(project.dir,'.wolf')),before)
+  } finally {project.cleanup()}
+})
+
+test('redelivered V2 step keeps model attribution and cumulative events add no usage',async()=>{
+  const project=makeTempProject(true)
+  try {
+    const sid='ses-redelivery',stamp=Date.now()
+    await handleOpenCodeEvent(project.dir,{id:'start',created:stamp,type:'session.step.started',data:{sessionID:sid,assistantMessageID:'message',model:{providerID:'provider',id:'model'}}})
+    const end={id:'end',created:stamp+1,type:'session.step.ended',data:{sessionID:sid,assistantMessageID:'message',tokens:{input:10,output:20}}}
+    await handleOpenCodeEvent(project.dir,end)
+    await handleOpenCodeEvent(project.dir,end)
+    await handleOpenCodeEvent(project.dir,{id:'cumulative',created:stamp+2,type:'session.usage.updated',data:{sessionID:sid,tokens:{input:100,output:200}}})
+    const dir=path.join(project.dir,'.wolf/usage/opencode'),files=fs.readdirSync(dir).filter(f=>f.endsWith('.json'))
+    assert.equal(files.length,1)
+    const {message}=JSON.parse(fs.readFileSync(path.join(dir,files[0]),'utf8'))
+    assert.equal(message.modelID,'model');assert.equal(message.providerID,'provider')
+    assert.deepEqual(message.tokens,{input:10,output:20})
+  } finally {project.cleanup()}
+})
+
+test('same session identifier in distinct projects initializes both project states',async()=>{
+  const first=makeTempProject(true),second=makeTempProject(true)
+  try {
+    for(const project of [first,second]) {
+      await handleOpenCodeEvent(project.dir,{id:'create',type:'session.created',data:{sessionID:'shared-id'}})
+      assert.ok(readSessionJSON(project.dir,'shared-id'))
+    }
+  } finally {first.cleanup();second.cleanup()}
 })

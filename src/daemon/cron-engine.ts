@@ -133,7 +133,9 @@ export class CronEngine {
    * repeatable maintenance actions catch up, once; old history is not replayed. */
   async checkMissedRuns(now=Date.now()): Promise<void> {
     if(this.stopped)return;
+    const cursors=this.readState()?.schedules ?? {};
     for(const {task,scheduled} of this.dueTasks.values()) {
+      if(!cursors[task.id] || Date.parse(cursors[task.id].next_due)>now)continue;
       if(task.catch_up===false || !['scan_project','consolidate_memory','generate_token_report'].includes(task.action.type))continue;
       await this.runScheduled(task,scheduled,now);
     }

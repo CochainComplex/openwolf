@@ -131,3 +131,16 @@ test('disabled init preserves project hooks and custom instructions byte-for-byt
   assert.equal(fs.readFileSync(path.join(root,'.claude/settings.json'),'utf8'),'{"hooks":{}}');
   assert.ok(!fs.existsSync(path.join(wolf,'hooks')));
 });
+
+test('ordinary repeated edits do not demand invented bugs or new preferences',t=>{
+  const root=fixture(t),wolf=path.join(root,'.wolf'),hooks=path.join(wolf,'hooks');
+  fs.mkdirSync(path.join(hooks,'sessions'),{recursive:true});
+  fs.writeFileSync(path.join(wolf,'config.json'),JSON.stringify({openwolf:{updates:{mode:'off'}}}));
+  fs.writeFileSync(path.join(wolf,'cerebrum.md'),'# Stable project knowledge');
+  fs.utimesSync(path.join(wolf,'cerebrum.md'),new Date(0),new Date(0));
+  const file=path.join(hooks,'sessions','ordinary-session.json');
+  fs.writeFileSync(file,JSON.stringify({session_id:'ordinary-session',started:new Date().toISOString(),files_read:{},files_written:[{file:'a.ts',tokens:1},{file:'a.ts',tokens:1},{file:'a.ts',tokens:1}],edit_counts:{'a.ts':3},stop_count:0}));
+  execFileSync(process.execPath,[path.resolve('dist/hooks/stop.js')],{input:JSON.stringify({session_id:'ordinary-session'}),env:{...process.env,CLAUDE_PROJECT_DIR:root,OPENWOLF_NO_UPDATE:'1'}});
+  const state=JSON.parse(fs.readFileSync(file,'utf8'));
+  assert.doesNotMatch(JSON.stringify(state.pending_reminders??[]),/edited 3\+|cerebrum.md hasn't been updated|Log the bug fixes/);
+});

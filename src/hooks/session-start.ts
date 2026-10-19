@@ -239,40 +239,6 @@ async function main(): Promise<void> {
     appendMarkdown(memoryPath, header);
   }
 
-  // Startup nudges — folded into the injected digest below (stderr from an
-  // exit-0 hook never reaches the model).
-  const startupNotes: string[] = [];
-  try {
-    const cerebrumPath = path.join(wolfDir, "cerebrum.md");
-    const cerebrumContent = fs.readFileSync(cerebrumPath, "utf-8");
-    const stat = fs.statSync(cerebrumPath);
-    const daysSinceUpdate = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60 * 24);
-
-    // Count actual entries (non-comment, non-empty lines in content sections)
-    const entryLines = cerebrumContent.split("\n").filter(l => {
-      const t = l.trim();
-      return t.startsWith("- ") || t.startsWith("* ") || (t.startsWith("[") && t.includes("]"));
-    });
-
-    if (entryLines.length < 3) {
-      startupNotes.push(
-        `cerebrum.md has only ${entryLines.length} entries. Record user preferences, project conventions, and mistakes to .wolf/cerebrum.md as you learn them this session.`
-      );
-    } else if (daysSinceUpdate > 3) {
-      startupNotes.push(
-        `cerebrum.md hasn't been updated in ${Math.floor(daysSinceUpdate)} days. Look for opportunities to add learnings this session.`
-      );
-    }
-  } catch {}
-
-  try {
-    if (readBugLogFile(wolfDir).bugs.length === 0) {
-      startupNotes.push(
-        `buglog.json is empty. If you encounter or fix any bugs, errors, or failed tests this session, log them to .wolf/buglog.json.`
-      );
-    }
-  } catch {}
-
   // Increment total_sessions in token-ledger — only for a genuinely new
   // session. Resume/compact re-fires SessionStart for a session already
   // counted, which used to inflate the lifetime count.
@@ -341,12 +307,6 @@ async function main(): Promise<void> {
       if (restoreParts.length > 0) {
         digest = restoreParts.join("\n\n") + (digest ? "\n\n" + digest : "");
       }
-    }
-
-    if (startupNotes.length > 0) {
-      digest = digest
-        ? `${digest}\n\n${startupNotes.map((n) => `- ${n}`).join("\n")}`
-        : startupNotes.map((n) => `- ${n}`).join("\n");
     }
 
     const startInput=JSON.parse(await readStdin());

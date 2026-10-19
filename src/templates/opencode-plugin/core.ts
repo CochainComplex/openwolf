@@ -89,8 +89,8 @@ const stepModels = new Map<string, { providerID?: string; modelID?: string; sess
 const startedSessions = new Set<string>()
 
 function ensureSession(directory: string, sessionId: string): void {
-  if (!wolfDirExists(directory) || startedSessions.has(sessionId)) return
-  startedSessions.add(sessionId)
+  if (!wolfDirExists(directory) || startedSessions.has(path.resolve(directory)+":"+sessionId)) return
+  startedSessions.add(path.resolve(directory)+":"+sessionId)
   handleSessionStart(directory, sessionId)
 }
 
@@ -115,13 +115,13 @@ export async function handleOpenCodeEvent(
 
   // Any event that names the session is activity for the turn-end dedupe.
   if (type === "session.created" || type === "message.updated" || type === "session.step.started") {
-    stoppedSinceActivity.delete(sessionId)
+    stoppedSinceActivity.delete(path.resolve(directory)+":"+sessionId)
   }
 
   // Lazily create the session for v2 sessions that never got
   // session.created; deletion drops the lazy-start marker instead.
   if (type === "session.deleted") {
-    startedSessions.delete(sessionId)
+    startedSessions.delete(path.resolve(directory)+":"+sessionId)
   } else {
     ensureSession(directory, sessionId)
   }
@@ -131,7 +131,7 @@ export async function handleOpenCodeEvent(
     const messageID = typeof data.assistantMessageID === "string" ? data.assistantMessageID : ""
     const model = record(data.model)
     if (messageID) {
-      stepModels.set(messageID, {
+      stepModels.set(path.resolve(directory)+":"+messageID, {
         providerID: typeof model.providerID === "string" ? model.providerID : undefined,
         modelID: typeof model.id === "string" ? model.id : undefined,
         sessionID: typeof data.sessionID === "string" ? data.sessionID : sessionId,
@@ -144,8 +144,8 @@ export async function handleOpenCodeEvent(
   if (type === "session.step.ended" || type === "session.step.failed") {
     const data = eventData(event)
     const messageID = typeof data.assistantMessageID === "string" ? data.assistantMessageID : ""
-    const step = messageID ? stepModels.get(messageID) : undefined
-    stepModels.delete(messageID)
+    const step = messageID ? stepModels.get(path.resolve(directory)+":"+messageID) : undefined
+    stepModels.delete(path.resolve(directory)+":"+messageID)
     if (messageID && data.tokens) {
       try {
         recordUsage(directory, {
@@ -203,7 +203,7 @@ export async function handleOpenCodeEvent(
     type === "session.execution.interrupted"
   if (!ended) return
 
-  if (type !== "session.deleted" && stoppedSinceActivity.has(sessionId)) return
+  if (type !== "session.deleted" && stoppedSinceActivity.has(path.resolve(directory)+":"+sessionId)) return
 
   scheduleUpdate(directory)
   const update = updateNotice(directory, sessionId)
@@ -232,7 +232,7 @@ export async function handleOpenCodeEvent(
   // A finished turn owns no in-flight steps; drop any model info still
   // keyed to this session.
   for (const [messageID, step] of stepModels) {
-    if (step.sessionID === sessionId) stepModels.delete(messageID)
+    if (messageID.startsWith(path.resolve(directory)+":") && step.sessionID === sessionId) stepModels.delete(messageID)
   }
 
   if (type === "session.deleted") {
@@ -244,9 +244,9 @@ export async function handleOpenCodeEvent(
       state => { state.ended = new Date().toISOString() },
     )
     deleteSession(sessionId)
-    stoppedSinceActivity.delete(sessionId)
+    stoppedSinceActivity.delete(path.resolve(directory)+":"+sessionId)
   } else {
-    stoppedSinceActivity.add(sessionId)
+    stoppedSinceActivity.add(path.resolve(directory)+":"+sessionId)
   }
 }
 
@@ -269,7 +269,7 @@ export function handleOpenCodeToolBefore(
   // v2: tool calls are activity and can arrive before any session event, so
   // lazily start the session and clear the turn-end dedupe.
   ensureSession(directory, sessionId)
-  stoppedSinceActivity.delete(sessionId)
+  stoppedSinceActivity.delete(path.resolve(directory)+":"+sessionId)
 
   const args = toolArgs(input)
   const tool = toolName.toLowerCase()
@@ -325,7 +325,7 @@ export function handleOpenCodeToolAfter(
   // v2: tool results are activity and can arrive before any session event,
   // so lazily start the session and clear the turn-end dedupe.
   ensureSession(directory, sessionId)
-  stoppedSinceActivity.delete(sessionId)
+  stoppedSinceActivity.delete(path.resolve(directory)+":"+sessionId)
 
   const args = toolArgs(input)
   const tool = toolName.toLowerCase()

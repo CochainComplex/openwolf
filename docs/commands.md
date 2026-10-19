@@ -141,3 +141,9 @@ openwolf bench --repo /path/to/fixture --yes
 ```
 
 The benchmark runs coding tasks with and without OpenWolf through the supported benchmark runner. It uses real model access and can consume paid usage. It requires `--yes`. Results apply to those tasks and runs, not every project or agent.
+
+### Saved observations versus transfer packets
+
+`openwolf handoff observations --agent claude --session <id>` reads the materialized session's bounded recent hook observations. These are historical, unverified observations; older entries outside that window may no longer be available there. Use `--agent codex` for Codex sessions.
+
+`openwolf handoff inspect <id>` expects a SHA-256 transfer-packet ID from `handoff export`. A tool-call observation ID is not a packet ID. Neither a saved observation nor a successful historical command establishes a current pass after inputs change.

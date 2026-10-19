@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased — October reliability repairs
+
+- Keep source watchers alive on errors and apply scanner exclusions; repair Windows PM2/OpenCode shim execution and hide background Git windows.
+- Add OpenCode V2 support with safe migration, real-payload lifecycle tracking and per-step usage accounting.
+- Inject only changed task facts, preserve disabled installations, make anatomy optional, and remove quota-like bookkeeping prompts.
+- Allow 15 seconds for SessionStart; cache dependency checks and move session cleanup off the blocking path.
+- Archive retired AI cron definitions and catch up supported maintenance once after suspend/restart.
+- Correct memory instructions and dashboard wording; update untouched project skills and make reframe self-contained.
+- Contributor authorship, reports, exclusions and validation limits: [October audit](docs/audit/october-2026.md).
+
+
 All notable changes to OpenWolf are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/), and OpenWolf uses
 [Semantic Versioning](https://semver.org/).
