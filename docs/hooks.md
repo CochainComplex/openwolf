@@ -14,7 +14,7 @@ Agent support is different across products and versions. A registered hook is no
 | Grok Build | Enabled Claude-compatible discovery | Uses the existing registration. OpenWolf activity notices are dashboard-only. |
 | Cursor, Gemini CLI, Antigravity | Project instruction files | No full hook integration or equivalent usage coverage is claimed. |
 
-See [release validation](release-2.5.2.md) for the native versions that were checked.
+See [2.5.3 release validation](release-2.5.3.md) for OpenCode V2 checks and [2.5.2 validation](release-2.5.2.md) for earlier native integration results.
 
 ## What hooks do
 
@@ -34,6 +34,8 @@ See [release validation](release-2.5.2.md) for the native versions that were che
 | `session-end.js` | Perform a final flush and record session completion. |
 
 The OpenCode plugin performs its work through native session and tool events. Grok uses compatible events where available. Do not assume that the table describes every agent equally.
+
+`openwolf init` checks `opencode --version` before installing the integration. OpenCode 1 receives the legacy plugin under `.opencode/plugin/`; OpenCode 2 receives a default `id`/`setup` plugin under `.opencode/plugins/`. If the executable cannot be queried, OpenWolf keeps the V1-compatible fallback and reports a warning; rerun `openwolf init` after installing or upgrading OpenCode.
 
 ## Permissions and memory authority
 
@@ -57,3 +59,9 @@ A missing heartbeat can mean that a hook was not installed, was not trusted or w
 Completed operations can create local activity receipts. Claude can show a status-line segment, Codex can show recovery notices, and OpenCode can show toasts. Message limits reduce repetition. Grok and headless sessions retain dashboard history without terminal notices.
 
 Update checks run in a detached worker. Tool hooks do not wait for npm requests or installation. The worker adds background network and disk work, while memory and indexing stay local. Read [session visibility](session-visibility-plan.md) and [automatic updates](automatic-updates.md) for configuration.
+
+### October reliability changes
+
+Claude and Codex SessionStart hooks have a 15-second timeout; ordinary tool hook budgets are unchanged. Hook dependency checks reuse a cache only while installed JavaScript file metadata is unchanged. Old session-file collection runs in a separate background process after startup context is produced. This reduces synchronous maintenance; it is not a guarantee that every machine completes within the timeout.
+
+OpenCode V2 migration preserves customized files. If any old plugin file is unrecognized or edited, installation stops with a warning instead of recursively deleting the directory or installing a second API generation alongside it. Review those files before retrying. V2 usage is recorded per assistant step, including reported failed-step usage; cumulative session totals are not added as separate usage. Missing model attribution remains unknown.

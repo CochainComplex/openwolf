@@ -1,3 +1,4 @@
+import {retireAiTasks} from "./cron-migration.js";
 import {withVisibilityStatusline} from './visibility-settings.js';
 import { waitDaemonReady } from "../utils/daemon-ready.js";
 import { claudePaths } from "./claude-paths.js";
@@ -78,6 +79,11 @@ export async function initCommand(options?: { agent?: string[] }): Promise<void>
   if (projectRoot === os.homedir() || projectRoot === path.parse(projectRoot).root) throw new Error("Initialize OpenWolf inside a project directory, not the home or filesystem root.");
 
   const wolfDir = path.join(projectRoot, ".wolf");
+  if (readJSON<any>(path.join(wolfDir, "config.json"), {})?.openwolf?.enabled === false) {
+    console.log("OpenWolf is disabled for this project. Init left its configuration and hooks untouched. Set openwolf.enabled to true explicitly before reinstalling.");
+    return;
+  }
+
   const isUpgrade = fs.existsSync(wolfDir);
 
   const version = getVersion();
@@ -122,6 +128,9 @@ export async function initCommand(options?: { agent?: string[] }): Promise<void>
   }
 
   // --- Cerebrum: seed project info only if fresh ---
+  const retiredTasks=retireAiTasks(wolfDir);
+  if (retiredTasks) console.log(`    Archived ${retiredTasks} retired AI cron task(s); no model calls will run.`);
+
   if (!isUpgrade) {
     seedCerebrum(wolfDir, projectRoot);
   }

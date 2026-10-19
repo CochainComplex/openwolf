@@ -28,9 +28,16 @@ export function MemoryViewer({ data }: { data: WolfData }) {
 
   return (
     <div>
+      <h1 className="text-2xl font-semibold mb-5">Memory</h1>
+      {data.recordedUsage?.memory && <details className="wd-card p-4 mb-4 text-sm">
+        <summary className="cursor-pointer">Instruction approval: {data.recordedUsage.memory.trust.status === 'unavailable' ? 'Not configured' : data.recordedUsage.memory.trust.status}</summary>
+        <p className="mt-3">{data.recordedUsage.memory.trust.reason}</p>
+        <p className="mt-2">Project notes and session history remain available. Protected instruction approval requires a separately managed installation.</p>
+      </details>}
       <div className="wd-card p-4 mb-4 text-sm">
         <strong>Archived history · retained indefinitely</strong>
-        <p>Older completed sessions are archived automatically. Pinned and active sessions stay in memory.</p>
+        <p>Scheduled maintenance can archive eligible completed sessions. Pinned and active sessions are retained.</p>
+        <p>{data.recordedUsage?.memory?.archive_preview.archived.length ?? 0} sessions currently eligible for archival.</p>
         <details><summary>{data.recordedUsage?.memory?.archives.length ?? 0} archived sessions</summary>
           {data.recordedUsage?.memory?.archives.map(a=><div key={a.id} className="flex gap-3 py-1 items-center"><span className="flex-1">{a.title} · {a.bytes.toLocaleString()} bytes</span><button className="underline" onClick={()=>void archiveAction(a.id)}>Read</button>{a.restorable && <button className="underline" onClick={()=>void archiveAction(a.id,true)}>Restore</button>}</div>)}
         </details>

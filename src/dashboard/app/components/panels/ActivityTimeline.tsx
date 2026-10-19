@@ -1,3 +1,4 @@
+import {OpenWolfActivity} from './OpenWolfActivity.js';
 import React, { useState, useMemo } from "react";
 import type { WolfData } from "../../hooks/useWolfData.js";
 
@@ -30,6 +31,8 @@ export function ActivityTimeline({ data }: { data: WolfData }) {
 
   return (
     <div>
+      <h1 className="text-2xl font-semibold mb-5">Activity</h1>
+      <div className="mb-6"><OpenWolfActivity/></div>
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <div className="flex gap-1 rounded-lg p-1" style={{ background: "var(--bg-surface)", border: "1px solid var(--border)" }}>
           {["all", "today", "week"].map((f) => (

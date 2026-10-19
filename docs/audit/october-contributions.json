@@ -1,0 +1,306 @@
+{
+  "reviewed_at": "2026-10-19",
+  "base": "04b75ca9c40d10c345ae4f5157e033d7397f1b7a",
+  "pull_requests": [
+    {
+      "url": "https://github.com/cytostack/openwolf/pull/121",
+      "commits": [
+        {
+          "authoredDate": "2026-09-14T14:16:56Z",
+          "authors": [
+            {
+              "email": "charl@britishhamper.com",
+              "id": "U_kgDOEauAFw",
+              "login": "CBenadieBHC",
+              "name": "CBenadieBHC"
+            }
+          ],
+          "committedDate": "2026-09-14T14:16:56Z",
+          "messageBody": "",
+          "messageHeadline": "Clarify the anatomy hit-rate warning",
+          "oid": "88e2974fb431fa69a3ead955d995c496f36eb885",
+          "disposition": "cherry-picked with source trailer; subsequent adaptations separately committed"
+        }
+      ]
+    },
+    {
+      "url": "https://github.com/cytostack/openwolf/pull/132",
+      "commits": [
+        {
+          "authoredDate": "2026-10-04T21:41:17Z",
+          "authors": [
+            {
+              "email": "dominique@itdove.com",
+              "id": "MDQ6VXNlcjI4NjEwMDU3",
+              "login": "itdove",
+              "name": "itdove"
+            }
+          ],
+          "committedDate": "2026-10-04T21:41:17Z",
+          "messageBody": "",
+          "messageHeadline": "fix: generate OpenCode V2 plugin for detected versions",
+          "oid": "eb299c293c9c504ae82dccf0fad97acdb9434466",
+          "disposition": "cherry-picked with source trailer; subsequent adaptations separately committed"
+        }
+      ]
+    },
+    {
+      "url": "https://github.com/cytostack/openwolf/pull/138",
+      "commits": [
+        {
+          "authoredDate": "2026-10-11T19:27:50Z",
+          "authors": [
+            {
+              "email": "6792742+davdittrich@users.noreply.github.com",
+              "id": "MDQ6VXNlcjY3OTI3NDI=",
+              "login": "davdittrich",
+              "name": "davdittrich"
+            }
+          ],
+          "committedDate": "2026-10-11T19:27:50Z",
+          "messageBody": "Hook-equipped agents were told both not to touch memory.md (hooks own it)\nand to write a session summary there at session end. Apply the same\nno-hooks condition already used in the bookkeeping paragraph.\n\nFixes #134",
+          "messageHeadline": "fix(templates): gate session-end memory.md write on missing hooks",
+          "oid": "842001849004f5b0e88846db700be540e5d7cd9a",
+          "disposition": "cherry-picked with source trailer; subsequent adaptations separately committed"
+        }
+      ]
+    },
+    {
+      "url": "https://github.com/cytostack/openwolf/pull/139",
+      "commits": [
+        {
+          "authoredDate": "2026-10-11T19:34:31Z",
+          "authors": [
+            {
+              "email": "6792742+davdittrich@users.noreply.github.com",
+              "id": "MDQ6VXNlcjY3OTI3NDI=",
+              "login": "davdittrich",
+              "name": "davdittrich"
+            }
+          ],
+          "committedDate": "2026-10-11T19:34:31Z",
+          "messageBody": "2.2 stopped shipping .wolf/reframe-frameworks.md on the grounds that the\n/reframe skill carries it, but the skill only pointed at that file, so\n/reframe read a missing path on 2.2+ installs. Embed the knowledge base\nin the skill (loaded only when /reframe runs) and guard against drift\nfrom the template that update still uses for legacy cleanup.\n\nFixes #135",
+          "messageHeadline": "fix(templates): make /reframe self-contained",
+          "oid": "6725c1fd980ea0b83d9e969e4d2a848c27942500",
+          "disposition": "cherry-picked with source trailer; subsequent adaptations separately committed"
+        },
+        {
+          "authoredDate": "2026-10-11T19:38:02Z",
+          "authors": [
+            {
+              "email": "6792742+davdittrich@users.noreply.github.com",
+              "id": "MDQ6VXNlcjY3OTI3NDI=",
+              "login": "davdittrich",
+              "name": "davdittrich"
+            }
+          ],
+          "committedDate": "2026-10-11T19:38:02Z",
+          "messageBody": "installSkills treated any installed skill that differed from the new\ntemplate as user-customized, so no template fix ever reached existing\ninstalls without a manual delete. Record the hash of what we install in\n.wolf/skills-manifest.json and also accept the hashes of templates shipped\nbefore the manifest existed; anything else is still left alone.\n\nRefs #135",
+          "messageHeadline": "fix(skills): let untouched installed skills follow template updates",
+          "oid": "22248ba21941130e3315e6e77b9a7a7017dd70f9",
+          "disposition": "cherry-picked with source trailer; subsequent adaptations separately committed"
+        },
+        {
+          "authoredDate": "2026-10-11T19:39:29Z",
+          "authors": [
+            {
+              "email": "6792742+davdittrich@users.noreply.github.com",
+              "id": "MDQ6VXNlcjY3OTI3NDI=",
+              "login": "davdittrich",
+              "name": "davdittrich"
+            }
+          ],
+          "committedDate": "2026-10-11T19:39:29Z",
+          "messageBody": "\u2026ommit\n\nReview follow-up: init and update both create .wolf before installSkills,\nso the existence guard only risked skipping the manifest write.",
+          "messageHeadline": "fix(skills): always record install manifest, label legacy hashes by c\u2026",
+          "oid": "9544308e1748a34801e9f363b314cf70ba30d6f3",
+          "disposition": "cherry-picked with source trailer; subsequent adaptations separately committed"
+        },
+        {
+          "authoredDate": "2026-10-11T19:41:43Z",
+          "authors": [
+            {
+              "email": "6792742+davdittrich@users.noreply.github.com",
+              "id": "MDQ6VXNlcjY3OTI3NDI=",
+              "login": "davdittrich",
+              "name": "davdittrich"
+            }
+          ],
+          "committedDate": "2026-10-11T19:41:43Z",
+          "messageBody": "\u2026date\n\nUsers who copied bundled commands into ~/.claude/commands kept the stale\n/reframe that reads a file 2.2+ no longer ships. Refresh a global copy only\nwhen it already exists and is untouched (same ownership rule as project\ncopies); never create one. Honours CLAUDE_CONFIG_DIR.\n\nRefs #135",
+          "messageHeadline": "fix(skills): refresh existing global Claude command copies on init/up\u2026",
+          "oid": "9dbe807674df454d9bf4992acc61de8a1993149a",
+          "disposition": "excluded: global command mutation"
+        },
+        {
+          "authoredDate": "2026-10-11T19:43:36Z",
+          "authors": [
+            {
+              "email": "6792742+davdittrich@users.noreply.github.com",
+              "id": "MDQ6VXNlcjY3OTI3NDI=",
+              "login": "davdittrich",
+              "name": "davdittrich"
+            }
+          ],
+          "committedDate": "2026-10-11T19:43:36Z",
+          "messageBody": "After inlining, src/templates/reframe-frameworks.md was a second 31KB copy\nused only by update's dead-weight cleanup to recognise untouched legacy\ncopies. Recognise them by sha256 of every shipped version instead, delete\nthe duplicate template, and drop the now-unused templatesDir parameter.\n\nRefs #135",
+          "messageHeadline": "refactor(reframe): keep the knowledge base only in the /reframe skill",
+          "oid": "ea2bf02f84f8b88f758a2e973e1d70ebcd24b020",
+          "disposition": "cherry-picked with source trailer; subsequent adaptations separately committed"
+        },
+        {
+          "authoredDate": "2026-10-11T19:49:26Z",
+          "authors": [
+            {
+              "email": "6792742+davdittrich@users.noreply.github.com",
+              "id": "MDQ6VXNlcjY3OTI3NDI=",
+              "login": "davdittrich",
+              "name": "davdittrich"
+            }
+          ],
+          "committedDate": "2026-10-11T19:49:26Z",
+          "messageBody": "\u2026tall\n\nA read-only ~/.claude/commands copy made installSkills throw EACCES,\nskipping the remaining project skills and the manifest write. User-level\nfiles are best effort: report the failure and carry on.\n\nRefs #135",
+          "messageHeadline": "fix(skills): never let a global command refresh abort the project ins\u2026",
+          "oid": "f91904db51d273592649cd7c9fbdfdeee9ff7756",
+          "disposition": "excluded: global command mutation"
+        }
+      ]
+    },
+    {
+      "url": "https://github.com/itdove/openwolf/pull/1",
+      "commits": [
+        {
+          "authoredDate": "2026-10-19T11:53:41Z",
+          "authors": [
+            {
+              "email": "43041463+CochainComplex@users.noreply.github.com",
+              "id": "MDQ6VXNlcjQzMDQxNDYz",
+              "login": "CochainComplex",
+              "name": "CochainComplex"
+            }
+          ],
+          "committedDate": "2026-10-19T11:55:47Z",
+          "messageBody": "Measured against OpenCode 2.0.32 with a probe plugin that records the\nreal hook and event payloads, and checked against the @opencode/plugin\n2.x schema. Nothing here depends on a model or provider.\n\n- Tool inputs name the file \"path\", not \"filePath\": reads and edits\n  were never recorded. Accept path first, keep the V1 keys.\n- A successful turn ends with session.execution.succeeded; session.idle\n  was never delivered (run and serve), so turns never stopped (no\n  session-end line, no ledger entry). Treat execution.succeeded as a\n  turn end and dedupe per session so idle plus succeeded stops once.\n- session.usage.updated carries cumulative session totals without a\n  model; recording each one over-counted. Record per-step usage from\n  session.step.ended and session.step.failed (failed steps can still be\n  billed), with the model from session.step.started, plus title and\n  compaction usage from session.usage.recorded.\n- Read results carry the raw file text in output.content; content[] adds\n  a header and line numbers, which skewed token estimates and read\n  fingerprints.\n- session.created is not delivered for a session that existed before the\n  plugin subscribed (first session of run, --continue, serve). Start the\n  session on first contact, before other handlers create its file.\n- Resubscribe with capped backoff when the event stream fails or ends.\n- Skip failed tool calls in execute.after (a failed edit changed\n  nothing) and keep hook exceptions from failing the agent's tool call.\n\nAdd tests/opencode-v2-runtime.test.ts driving index-v2.ts through a fake\nplugin context; nine of its tests fail without this change.",
+          "messageHeadline": "fix(opencode): make the V2 plugin track real OpenCode 2 sessions",
+          "oid": "3d5969a1939aa9fd68a1ade6d3e4107942e0dffa"
+        }
+      ],
+      "disposition": "cherry-picked with source trailer; subsequent adaptations separately committed"
+    }
+  ],
+  "issue_reporters": [
+    {
+      "author": {
+        "id": "U_kgDOEBWn4A",
+        "is_bot": false,
+        "login": "citizenshanegit",
+        "name": ""
+      },
+      "number": 137
+    },
+    {
+      "author": {
+        "id": "U_kgDOEBWn4A",
+        "is_bot": false,
+        "login": "citizenshanegit",
+        "name": ""
+      },
+      "number": 136
+    },
+    {
+      "author": {
+        "id": "MDQ6VXNlcjY3OTI3NDI=",
+        "is_bot": false,
+        "login": "davdittrich",
+        "name": "Dennis Alexis Valin Dittrich"
+      },
+      "number": 135
+    },
+    {
+      "author": {
+        "id": "MDQ6VXNlcjY3OTI3NDI=",
+        "is_bot": false,
+        "login": "davdittrich",
+        "name": "Dennis Alexis Valin Dittrich"
+      },
+      "number": 134
+    },
+    {
+      "author": {
+        "id": "MDQ6VXNlcjE3MjQ0MTUx",
+        "is_bot": false,
+        "login": "shabbirmurtaza",
+        "name": "Shabbir Murtaza"
+      },
+      "number": 131
+    },
+    {
+      "author": {
+        "id": "U_kgDOCz8z5w",
+        "is_bot": false,
+        "login": "aethyron",
+        "name": ""
+      },
+      "number": 130
+    },
+    {
+      "author": {
+        "id": "MDQ6VXNlcjEwNDUzNzc=",
+        "is_bot": false,
+        "login": "eram",
+        "name": "eram"
+      },
+      "number": 129
+    },
+    {
+      "author": {
+        "id": "MDQ6VXNlcjE0MzUyMjY5",
+        "is_bot": false,
+        "login": "marrahi",
+        "name": "Murray"
+      },
+      "number": 128
+    },
+    {
+      "author": {
+        "id": "MDQ6VXNlcjc1MDE3MjE5",
+        "is_bot": false,
+        "login": "Jezzaw56",
+        "name": ""
+      },
+      "number": 126
+    },
+    {
+      "author": {
+        "id": "MDQ6VXNlcjc1MDE3MjE5",
+        "is_bot": false,
+        "login": "Jezzaw56",
+        "name": ""
+      },
+      "number": 125
+    },
+    {
+      "author": {
+        "id": "MDQ6VXNlcjc1MDE3MjE5",
+        "is_bot": false,
+        "login": "Jezzaw56",
+        "name": ""
+      },
+      "number": 124
+    },
+    {
+      "author": {
+        "id": "MDQ6VXNlcjc1MDE3MjE5",
+        "is_bot": false,
+        "login": "Jezzaw56",
+        "name": ""
+      },
+      "number": 123
+    }
+  ],
+  "workflow_source": {
+    "name": "Casepod project retrospective",
+    "provided_by": "Cytostack",
+    "private_source_distributed": false
+  }
+}

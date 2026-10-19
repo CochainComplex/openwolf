@@ -24,7 +24,7 @@ function buildCodexHooks(projectRoot: string) {
   return {
     hooks: {
       SessionStart: [
-        { matcher: "startup|resume|clear", hooks: [hookEntry(projectRoot, "session-start.js", 5, "OpenWolf session bootstrap")] },
+        { matcher: "startup|resume|clear", hooks: [hookEntry(projectRoot, "session-start.js", 15, "OpenWolf session bootstrap")] },
       ],
       PreToolUse: [
         { matcher: "Bash", hooks: [hookEntry(projectRoot, "pre-bash.js", 5, "OpenWolf shell precheck")] },

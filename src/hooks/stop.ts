@@ -48,8 +48,6 @@ async function main(): Promise<void> {
     // context instead — same visibility, zero extra turns.
     if (!s.reminders_sent) s.reminders_sent = {};
     const reminderChecks: Array<[string, string | null]> = [
-      ["buglog", checkForMissingBugLogs(wolfDir, s)],
-      ["cerebrum", checkCerebrumFreshness(wolfDir, s)],
       ["semantic", checkSemanticSummaries(wolfDir, s)],
     ];
     const reminders: string[] = [];
@@ -89,59 +87,6 @@ async function main(): Promise<void> {
   }
 
   flushSessionToLedger(wolfDir, entry);
-}
-
-/**
- * Check if files were edited multiple times but buglog.json wasn't updated.
- * Returns a reminder string if action is needed, otherwise null.
- */
-function checkForMissingBugLogs(wolfDir: string, session: SessionData): string | null {
-  if (!session.edit_counts) return null;
-
-  const multiEditFiles = Object.entries(session.edit_counts)
-    .filter(([, count]) => count >= 3)
-    .map(([file]) => path.basename(file));
-
-  if (multiEditFiles.length === 0) return null;
-
-  let buglogWritten = false;
-  try {
-    const stat = fs.statSync(path.join(wolfDir, "buglog.json"));
-    const sessionStartMs = session.started ? Date.parse(session.started) : 0;
-    buglogWritten = sessionStartMs > 0 && stat.mtimeMs >= sessionStartMs;
-  } catch {}
-
-  if (!buglogWritten) {
-    return `ACTION REQUIRED: Files edited 3+ times this session (${multiEditFiles.join(", ")}) but buglog.json was not updated. Log the bug fixes to .wolf/buglog.json now.`;
-  }
-  return null;
-}
-
-/**
- * Check if STATUS.md is older than the session start AND there was meaningful
- * code activity (3+ writes outside .wolf/). If so, nudge Claude to update
- * STATUS.md so the next /clear has fresh handoff context.
- */
-// (The STATUS.md staleness nag was removed in 2.1: STATUS.md is regenerated
-// on demand by the /handoff skill instead of being nagged about every turn.)
-
-/**
- * Check if cerebrum.md was updated recently. If it hasn't been updated in
- * a while and there was significant activity, return a reminder.
- */
-function checkCerebrumFreshness(wolfDir: string, session: SessionData): string | null {
-  const cerebrumPath = path.join(wolfDir, "cerebrum.md");
-  try {
-    const stat = fs.statSync(cerebrumPath);
-    const hoursSinceUpdate = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60);
-
-    if (hoursSinceUpdate > 24 && session.files_written.length >= 3) {
-      return `ACTION REQUIRED: cerebrum.md hasn't been updated in ${Math.floor(hoursSinceUpdate)}h and ${session.files_written.length} files were modified. Update .wolf/cerebrum.md with any new user preferences, conventions, or gotchas discovered this session.`;
-    }
-  } catch {
-    // cerebrum.md doesn't exist, that's ok
-  }
-  return null;
 }
 
 /**

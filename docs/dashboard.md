@@ -10,9 +10,21 @@ The command starts a daemon if needed and opens the project dashboard. Keep the 
 
 ## Project overview
 
-Review the project identity, map freshness, tracked files, hook health and context checks. The OpenWolf activity card shows completed actions, recorded counts, the installed bootstrap version and update status. It refreshes from the local API.
+The overview starts with the project name, indexed files and recorded reads and writes. It keeps provider token counts separate from command-output estimates. It does not report a combined savings figure or claim that shorter output reduced your bill.
 
-An activity count covers recorded OpenWolf operations. It is not a count of every action performed by the coding agent. Display limits or unsupported terminal interfaces can leave an action visible only in the dashboard.
+Activity, update diagnostics and memory approval notices are no longer placed above the overview. Open the relevant page instead:
+
+| Page | What it shows |
+| --- | --- |
+| Activity | Recent OpenWolf operations and session history. The operation list retains up to 100 entries. |
+| Memory | Session notes, archives and the expandable instruction-approval status. |
+| System | Running daemon/dashboard version, installed project-hook version, update status and hook failures. |
+| Schedules | Maintenance schedules, run history and failed tasks. |
+| File index | Indexed files and descriptions. |
+
+Light mode is the default. An explicitly selected theme is remembered. A healthy daemon is shown neutrally; red is reserved for conditions that need attention.
+
+An operation count is not a count of every action the coding assistant performed. “No update check recorded” means no result is available; it does not imply an update is currently running. The running daemon and installed project hooks may have different versions until the daemon is restarted.
 
 ## Token usage
 

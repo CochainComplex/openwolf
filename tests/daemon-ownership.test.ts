@@ -55,13 +55,13 @@ describe("daemon pid ownership", () => {
     assert.strictEqual(lookupDaemonPid(wolfDir, root).status, "foreign");
   });
 
-  test("a dead pid is stale, never owned", () => {
+  test("a dead pid is stale, never owned", async () => {
     const root = tmpProject();
     const wolfDir = path.join(root, ".wolf");
     // Spawn and reap a child so its pid is certainly not live.
     const dead = spawn(process.execPath, ["-e", "process.exit(0)"], { stdio: "ignore" });
     const deadPid = dead.pid!;
-    execFileSync(process.execPath, ["-e", "setTimeout(()=>{},300)"]); // let it reap
+    await new Promise<void>((resolve, reject) => {dead.once("error", reject); dead.once("close", () => resolve());});
     fs.writeFileSync(
       daemonPidPath(wolfDir),
       JSON.stringify({ pid: deadPid, project_root: root, port: 18791, hostname: os.hostname(), started_at: new Date().toISOString() }),

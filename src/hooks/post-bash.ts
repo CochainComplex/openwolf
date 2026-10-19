@@ -1,9 +1,10 @@
+import {takeTaskReview} from "./task-review.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import * as crypto from "node:crypto";
 import {
   getWolfDir, ensureWolfDir, readJSON, writeJSON, readStdin, emitHookJSON,
-  hookMain, getSessionFilePath, normalizePath, getProjectDir, projectRelativePath
+  hookMain, getSessionFilePath, normalizePath, getProjectDir, projectRelativePath, detectAgent
 } from "./shared.js";
 import {
   classifyCommand, condenseOutput, estimateTokens,
@@ -79,6 +80,8 @@ async function main(): Promise<void> {
 
   const sessionFile = getSessionFilePath(input);
   const notes: string[] = [];
+  const review=takeTaskReview(getProjectDir(),detectAgent(),input.session_id ?? "");
+  if(review)notes.push(review);
 
   // ── Bash-channel read registration + dedupe advisory ──────────────────────
   try {

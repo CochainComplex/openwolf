@@ -1,3 +1,5 @@
+import {spawn} from "node:child_process";
+import {fileURLToPath} from "node:url";
 import {hookReceipt} from './visibility.js';
 import {activeContext} from "./handoff-state.js";
 import {updateNotice} from "./runtime-updates.js";
@@ -193,7 +195,7 @@ async function main(): Promise<void> {
   const sessionFile = getSessionFilePath(hookInput);
   const sessionId = hookInput.session_id ??
     `session-${now.toISOString().slice(0, 10)}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
-  gcSessionFiles();
+  // Session-file collection runs after context delivery in a separate process.
 
   // Hook install self-test (2.2): a missing dependency file once silently
   // killed a hook for 3 weeks across 440 invocations. Verify every installed
@@ -236,40 +238,6 @@ async function main(): Promise<void> {
     const header = `\n## Session: ${now.toISOString().slice(0, 10)} ${timeShort()}\n\n| Time | Action | File(s) | Outcome | ~Tokens |\n|------|--------|---------|---------|--------|\n`;
     appendMarkdown(memoryPath, header);
   }
-
-  // Startup nudges — folded into the injected digest below (stderr from an
-  // exit-0 hook never reaches the model).
-  const startupNotes: string[] = [];
-  try {
-    const cerebrumPath = path.join(wolfDir, "cerebrum.md");
-    const cerebrumContent = fs.readFileSync(cerebrumPath, "utf-8");
-    const stat = fs.statSync(cerebrumPath);
-    const daysSinceUpdate = (Date.now() - stat.mtimeMs) / (1000 * 60 * 60 * 24);
-
-    // Count actual entries (non-comment, non-empty lines in content sections)
-    const entryLines = cerebrumContent.split("\n").filter(l => {
-      const t = l.trim();
-      return t.startsWith("- ") || t.startsWith("* ") || (t.startsWith("[") && t.includes("]"));
-    });
-
-    if (entryLines.length < 3) {
-      startupNotes.push(
-        `cerebrum.md has only ${entryLines.length} entries. Record user preferences, project conventions, and mistakes to .wolf/cerebrum.md as you learn them this session.`
-      );
-    } else if (daysSinceUpdate > 3) {
-      startupNotes.push(
-        `cerebrum.md hasn't been updated in ${Math.floor(daysSinceUpdate)} days. Look for opportunities to add learnings this session.`
-      );
-    }
-  } catch {}
-
-  try {
-    if (readBugLogFile(wolfDir).bugs.length === 0) {
-      startupNotes.push(
-        `buglog.json is empty. If you encounter or fix any bugs, errors, or failed tests this session, log them to .wolf/buglog.json.`
-      );
-    }
-  } catch {}
 
   // Increment total_sessions in token-ledger — only for a genuinely new
   // session. Resume/compact re-fires SessionStart for a session already
@@ -341,12 +309,6 @@ async function main(): Promise<void> {
       }
     }
 
-    if (startupNotes.length > 0) {
-      digest = digest
-        ? `${digest}\n\n${startupNotes.map((n) => `- ${n}`).join("\n")}`
-        : startupNotes.map((n) => `- ${n}`).join("\n");
-    }
-
     const startInput=JSON.parse(await readStdin());
     const active=activeContext(getProjectDir(),detectAgent(),startInput.session_id ?? "",startInput.source === "compact");
     if(active)digest += "\n\n"+active;
@@ -357,6 +319,16 @@ async function main(): Promise<void> {
         ...(notice ? {systemMessage: notice} : {}),
         hookSpecificOutput: { hookEventName: "SessionStart", additionalContext: digest },
       }));
+    }
+  } catch {}
+  try {
+    const cache = readJSON<{checked_at?: number}>(path.join(hooksDir, "_maintenance.json"), {});
+    if (Date.now() - (cache.checked_at ?? 0) > 24 * 3600_000) {
+      const child = spawn(process.execPath, [fileURLToPath(new URL("./session-maintenance.js", import.meta.url)), wolfDir], {
+        detached: true, windowsHide: true, stdio: "ignore",
+      });
+      child.on("error", () => {});
+      child.unref();
     }
   } catch {}
 }
@@ -372,6 +344,10 @@ function selfTestHooks(hooksDir: string): string[] {
   const problems: string[] = [];
   try {
     const files = fs.readdirSync(hooksDir).filter((f) => f.endsWith(".js"));
+    const signature = files.sort().map(f => {const st=fs.statSync(path.join(hooksDir,f));return `${f}:${st.size}:${st.mtimeMs}:${st.ctimeMs}`;}).join("|");
+    const cacheFile=path.join(hooksDir,"_health-cache.json");
+    const cache=readJSON<{signature?:string;problems?:string[]}>(cacheFile,{});
+    if(cache.signature===signature && Array.isArray(cache.problems))return cache.problems;
     for (const f of files) {
       let src = "";
       try {
@@ -386,6 +362,7 @@ function selfTestHooks(hooksDir: string): string[] {
         }
       }
     }
+    writeJSON(cacheFile,{signature,problems:[...new Set(problems)].slice(0,3)});
   } catch {}
   return [...new Set(problems)].slice(0, 3);
 }

@@ -1,3 +1,4 @@
+import {takeTaskReview} from "./task-review.js";
 import {hookReceipt} from './visibility.js';
 import {activeContext} from "./handoff-state.js";
 import {updateNotice} from "./runtime-updates.js";
@@ -36,6 +37,8 @@ async function main(): Promise<void> {
 
   const active=activeContext(getProjectDir(),detectAgent(),input.session_id ?? "");
   if(active)drained.push(active);
+  const review=takeTaskReview(getProjectDir(),detectAgent(),input.session_id ?? "");
+  if(review)drained.push(review);
   const notice=(detectAgent()==="claude"||detectAgent()==="codex" ? updateNotice(getProjectDir(),input.session_id ?? "") : undefined) ?? hookReceipt(getProjectDir(),detectAgent(),{...input,prompt_id:String(readJSON<Record<string,unknown>>(sessionFile,{}).stop_count??0)});
   if (!drained.length && !notice) return;
   process.stdout.write(JSON.stringify({...(notice?{systemMessage:notice}:{}),...(drained.length?{hookSpecificOutput:{hookEventName:"UserPromptSubmit",additionalContext:drained.join("\n\n")}}:{})}));

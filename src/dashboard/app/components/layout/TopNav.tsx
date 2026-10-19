@@ -6,25 +6,27 @@ const NAV_ITEMS = [
   { id: "overview", label: "Overview" },
   { id: "tokens", label: "Tokens" },
   { id: "activity", label: "Activity" },
-  { id: "cron", label: "Cron" },
-  { id: "cerebrum", label: "Cerebrum" },
+  { id: "cron", label: "Schedules" },
+  { id: "cerebrum", label: "Project notes" },
   { id: "handover", label: "Handover" },
   { id: "memory", label: "Memory" },
-  { id: "anatomy", label: "Anatomy" },
+  { id: "anatomy", label: "File index" },
   { id: "bugs", label: "Bugs" },
+  { id: "system", label: "System" },
 ];
 
 interface TopNavProps {
   activePanel: string;
   onNavigate: (panel: string) => void;
   daemonStatus: string;
+  connected: boolean;
   projectName: string;
   agents: string[];
   theme: Theme;
   onToggleTheme: () => void;
 }
 
-export function TopNav({ activePanel, onNavigate, daemonStatus, projectName, agents, theme, onToggleTheme }: TopNavProps) {
+export function TopNav({ activePanel, onNavigate, daemonStatus, connected, projectName, agents, theme, onToggleTheme }: TopNavProps) {
   return (
     <header className="sticky top-0 z-50" style={{ background: "var(--bg-base)", borderBottom: "1px solid var(--border-subtle)" }}>
       <div className="max-w-7xl mx-auto px-5">
@@ -50,9 +52,9 @@ export function TopNav({ activePanel, onNavigate, daemonStatus, projectName, age
                 ))}
               </div>
             )}
-            <LiveIndicator />
-            <span className="wd-label hidden sm:inline" style={{ color: daemonStatus === "ok" || daemonStatus === "running" ? "var(--text-secondary)" : "var(--accent)" }}>
-              {daemonStatus === "ok" || daemonStatus === "running" ? "daemon on" : `daemon ${daemonStatus}`}
+            <LiveIndicator connected={connected} />
+            <span className="wd-label hidden sm:inline" style={{ color: daemonStatus === "healthy" || daemonStatus === "ok" || daemonStatus === "running" ? "var(--text-secondary)" : "var(--accent)" }}>
+              {connected ? `Daemon ${daemonStatus}` : "Status unavailable"}
             </span>
             <button onClick={onToggleTheme} className="wd-pill px-3 py-1 cursor-pointer"
               style={{ color: "var(--text-secondary)" }}

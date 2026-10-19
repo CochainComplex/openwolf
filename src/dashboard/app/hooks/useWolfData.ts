@@ -120,6 +120,7 @@ interface CronManifest {
 }
 
 interface Health {
+  version?: string;
   status: string;
   uptime_seconds: number;
 }
@@ -159,12 +160,14 @@ export interface WolfData {
   statusDoc: string;
   scanState: ScanState;
   loading: boolean;
+  connected: boolean;
   authError: boolean;
   client: WolfClient | null;
 }
 
 export function useWolfData(): WolfData {
   const [recordedUsage, setRecordedUsage] = useState<RecordedUsage | null>(null);
+  const [connected, setConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [anatomy, setAnatomy] = useState<WolfData["anatomy"]>({ entries: [], metadata: { files: 0, hits: 0, misses: 0 } });
   const [cerebrum, setCerebrum] = useState<CerebrumData>({ preferences: [], learnings: [], doNotRepeat: [], decisions: [], lastUpdated: "" });
@@ -300,7 +303,7 @@ export function useWolfData(): WolfData {
     void refresh();
     const refreshTimer = setInterval(refresh, 15000);
     // WebSocket
-    const wsClient = new WolfClient();
+    const wsClient = new WolfClient(undefined, setConnected);
     wsClient.connect();
     setClient(wsClient);
 
@@ -312,12 +315,12 @@ export function useWolfData(): WolfData {
         processFiles(msg.files);
       }
       if (msg.type === "health") {
-        setHealth({ status: msg.status, uptime_seconds: msg.uptime });
+        setHealth(previous=>({...previous, status: msg.status, uptime_seconds: msg.uptime }));
       }
     });
 
     return () => { disposed = true; clearInterval(refreshTimer); wsClient.disconnect(); };
   }, [processFiles]);
 
-  return { recordedUsage, anatomy, cerebrum, memory, tokenLedger, cronState, cronManifest, buglog, health, identity, project, config, contextHealth, hookHealth, statusDoc, scanState, loading, authError, client };
+  return { recordedUsage, anatomy, cerebrum, memory, tokenLedger, cronState, cronManifest, buglog, health, identity, project, config, contextHealth, hookHealth, statusDoc, scanState, loading, connected, authError, client };
 }

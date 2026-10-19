@@ -17,6 +17,9 @@ export function recordUsage(directory: string, info: any): void {
       const previous = JSON.parse(fs.readFileSync(file,"utf8"))?.message
       if (previous?.time?.completed && !info.time?.completed) return true
       if ((previous?.time?.completed ?? 0) > (info.time?.completed ?? 0)) return true
+      // Redelivery can omit model metadata after a step's in-memory state was cleared.
+      message.providerID ??= previous?.providerID
+      message.modelID ??= previous?.modelID
     } catch {}
   try {
     const fd = fs.openSync(tmp, "wx", 0o600)

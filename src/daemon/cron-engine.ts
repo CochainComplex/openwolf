@@ -29,6 +29,7 @@ interface CronTask {
   retry: { max_attempts: number; backoff: string; base_delay_seconds: number };
   failsafe: { on_failure: string; dead_letter?: boolean; alert_after_consecutive_failures?: number };
   enabled: boolean;
+  catch_up?: boolean;
 }
 
 interface CronManifest {
@@ -50,6 +51,7 @@ interface CronState {
   execution_log: ExecutionEntry[];
   dead_letter_queue: Array<{ task_id: string; error: string; timestamp: string; attempts: number }>;
   upcoming: unknown[];
+  schedules?: Record<string,{signature:string;next_due:string}>;
 }
 
 /**
@@ -73,6 +75,11 @@ export class CronEngine {
   private logger: Logger;
   private broadcast: (msg: unknown) => void;
   private scheduledTasks: cron.ScheduledTask[] = [];
+  private catchupTimer?: ReturnType<typeof setInterval>;
+  private dueTasks = new Map<string,{task:CronTask;scheduled:cron.ScheduledTask}>();
+  private inFlight = new Set<string>();
+  private retryTimers = new Map<string,ReturnType<typeof setTimeout>>();
+  private stopped = false;
   private failureCounts = new Map<string, number>();
 
   constructor(
@@ -88,6 +95,8 @@ export class CronEngine {
   }
 
   start(): void {
+    this.stop();
+    this.stopped=false;
     const manifest = this.readManifest();
     for (const task of manifest.tasks) {
       if (!task.enabled) continue;
@@ -96,18 +105,65 @@ export class CronEngine {
         continue;
       }
       const scheduled = cron.schedule(task.schedule, () => {
-        this.executeTask(task).catch((err) => {
-          this.logger.error(`Task ${task.id} failed: ${err}`);
-        });
+        this.runScheduled(task, scheduled).catch(err=>this.logger.error(`Task ${task.id}: ${err}`));
+      });
+      this.dueTasks.set(task.id,{task,scheduled});
+      this.mutateState(state=>{
+        state.schedules ??= {};
+        const signature=JSON.stringify([task.schedule,task.action]);
+        const existing=state.schedules[task.id];
+        if (!existing || existing.signature!==signature || !Number.isFinite(Date.parse(existing.next_due))) {
+          const next=this.nextRun(scheduled);
+          if(next)state.schedules[task.id]={signature,next_due:next.toISOString()};
+        }
       });
       this.scheduledTasks.push(scheduled);
       this.logger.info(`Scheduled task: ${task.name} (${task.schedule})`);
     }
+    void this.checkMissedRuns().catch(err=>this.logger.warn(`Cron catch-up: ${err}`));
+    this.catchupTimer=setInterval(()=>void this.checkMissedRuns().catch(err=>this.logger.warn(`Cron catch-up: ${err}`)),30_000);
+    this.catchupTimer.unref();
+  }
+
+  private nextRun(scheduled: cron.ScheduledTask): Date | null {
+    return (scheduled as cron.ScheduledTask & {getNextRun():Date|null}).getNextRun();
+  }
+
+  /** Persisted next-due cursors survive restart and suspend. Only built-in,
+   * repeatable maintenance actions catch up, once; old history is not replayed. */
+  async checkMissedRuns(now=Date.now()): Promise<void> {
+    if(this.stopped)return;
+    const cursors=this.readState()?.schedules ?? {};
+    for(const {task,scheduled} of this.dueTasks.values()) {
+      if(!cursors[task.id] || Date.parse(cursors[task.id].next_due)>now)continue;
+      if(task.catch_up===false || !['scan_project','consolidate_memory','generate_token_report'].includes(task.action.type))continue;
+      await this.runScheduled(task,scheduled,now);
+    }
+  }
+
+  private async runScheduled(task:CronTask, scheduled:cron.ScheduledTask, now=Date.now()):Promise<void> {
+    if(this.stopped || this.inFlight.has(task.id) || this.retryTimers.has(task.id))return;
+    const next=this.nextRun(scheduled);
+    if(!next)return;
+    let claimed=false;
+    // Claim before execution under the same lock as other daemon writers.
+    const written=this.mutateState(state=>{
+      const cursor=state.schedules?.[task.id];
+      if(!cursor || cursor.signature!==JSON.stringify([task.schedule,task.action]) || Date.parse(cursor.next_due)>now)return;
+      cursor.next_due=next.toISOString();
+      claimed=true;
+    });
+    if(written && claimed)await this.executeTask(task);
   }
 
   stop(): void {
+    this.stopped=true;
+    clearInterval(this.catchupTimer);
+    for(const timer of this.retryTimers.values())clearTimeout(timer);
+    this.retryTimers.clear();
+    this.dueTasks.clear();
     for (const task of this.scheduledTasks) {
-      task.stop();
+      task.destroy();
     }
     this.scheduledTasks = [];
   }
@@ -172,6 +228,8 @@ export class CronEngine {
   }
 
   private async executeTask(task: CronTask): Promise<void> {
+    if(this.stopped || this.inFlight.has(task.id) || this.retryTimers.has(task.id))return;
+    this.inFlight.add(task.id);
     const startTime = Date.now();
     this.logger.info(`Executing task: ${task.name}`);
 
@@ -209,13 +267,14 @@ export class CronEngine {
 
       this.logger.error(`Task ${task.name} failed (attempt ${failures}): ${errorMsg}`);
 
-      if (failures < task.retry.max_attempts) {
+      if (!this.stopped && failures < (task.retry?.max_attempts ?? 1)) {
         // Retry with backoff
         const delay = this.calculateDelay(task.retry.backoff, task.retry.base_delay_seconds, failures);
         this.logger.info(`Retrying ${task.name} in ${delay}ms`);
-        setTimeout(() => {
+        this.retryTimers.set(task.id,setTimeout(() => {
+          this.retryTimers.delete(task.id);
           this.executeTask(task).catch(() => {});
-        }, delay);
+        }, delay));
       } else {
         // Dead letter or skip
         this.mutateState((state) => {
@@ -227,7 +286,7 @@ export class CronEngine {
             error: errorMsg,
           });
 
-          if (task.failsafe.dead_letter) {
+          if (task.failsafe?.dead_letter) {
             state.dead_letter_queue.push({
               task_id: task.id,
               error: errorMsg,
@@ -245,6 +304,8 @@ export class CronEngine {
         status: "failed",
         duration_ms: duration,
       });
+    } finally {
+      this.inFlight.delete(task.id);
     }
   }
 
@@ -285,7 +346,7 @@ export class CronEngine {
       // 2.5: OpenWolf makes no model calls of any kind. The old "ai_task"
       // action shelled out to `claude -p`, which is the one thing that made
       // "local file I/O only, no API calls" untrue. Tasks of this type are
-      // left in place but refused, so a stale manifest fails loudly instead
+      // archived on init/update and refused here, so an unmigrated manifest fails loudly instead
       // of silently reaching the network.
       case "ai_task":
         throw new Error(
@@ -311,7 +372,7 @@ export class CronEngine {
         const state = readJSON<{ git_head?: string | null }>(path.join(this.wolfDir, "_scan-state.json"), {});
         if (state.git_head) {
           const head = execFileSync("git", ["rev-parse", "HEAD"], {
-            cwd: this.projectRoot, encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"], timeout: 3000,
+            windowsHide: true, cwd: this.projectRoot, encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"], timeout: 3000,
           }).trim();
           if (head && head !== state.git_head) return false;
         }

@@ -33,7 +33,7 @@ export function buildHookSettings(projectDir: string) {
   const c = (file: string, timeout: number) => cmd(projectDir, file, timeout);
   return {
     hooks: {
-      SessionStart: [{ matcher: "", hooks: [c("session-start.js", 5)] }],
+      SessionStart: [{ matcher: "", hooks: [c("session-start.js", 15)] }],
       UserPromptSubmit: [{ matcher: "", hooks: [c("user-prompt-submit.js", 5)] }],
       PreToolUse: [
         { matcher: "Read", hooks: [c("pre-read.js", 5)] },
@@ -95,6 +95,10 @@ export const HOOK_FILES = [
   "ledger.js",
   "ledger-math.js",
   "shared.js",
+  "task-review.js",
+  "anatomy-scope.js",
+  "ignore-runtime.js",
+  "session-maintenance.js",
   "bug-index.js",
   "hook-attachments.js",
   "anatomy-store.js",

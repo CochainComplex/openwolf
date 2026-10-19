@@ -1,4 +1,4 @@
-// Exercise the actual packed npm CLI in disposable projects, including a real 2.5.1 upgrade.
+// Exercise the actual packed npm CLI in disposable projects, including a real 2.5.2 upgrade.
 import fs from 'node:fs';import path from 'node:path';import os from 'node:os';import net from 'node:net';
 import {execFileSync,spawn} from 'node:child_process';import assert from 'node:assert/strict';
 import {pathToFileURL} from 'node:url';
@@ -18,21 +18,21 @@ const initGit=root=>{fs.mkdirSync(root,{recursive:true});execFileSync('git',['in
 try{
  const packed=JSON.parse(npm(['pack','--json','--pack-destination',temp],source))[0];const tarball=path.join(temp,packed.filename);
  const install=path.join(temp,'install');npm(['install','--prefix',install,'--ignore-scripts','--no-audit','--no-fund',tarball]);
- const cli=path.join(install,'node_modules/openwolf/dist/bin/openwolf.js');assert.equal(run(cli,['--version'],temp).trim(),'2.5.2');
+ const cli=path.join(install,'node_modules/openwolf/dist/bin/openwolf.js');assert.equal(run(cli,['--version'],temp).trim(),'2.5.3');
  const clean=path.join(temp,'clean');initGit(clean);run(cli,['init','--agent','claude','codex','opencode','grok'],clean);
  const wolf=path.join(clean,'.wolf');
- for(const f of ['visibility.js','visibility-statusline.js','handoff-state.js','update-worker.js'])assert(fs.existsSync(path.join(wolf,'hooks',f)),f);
- assert.equal(JSON.parse(fs.readFileSync(path.join(wolf,'hooks/runtime.json'))).version,'2.5.2');
+ for(const f of ['visibility.js','visibility-statusline.js','handoff-state.js','update-worker.js','task-review.js','session-maintenance.js','anatomy-scope.js','ignore-runtime.js'])assert(fs.existsSync(path.join(wolf,'hooks',f)),f);
+ assert.equal(JSON.parse(fs.readFileSync(path.join(wolf,'hooks/runtime.json'))).version,'2.5.3');
  assert(fs.existsSync(path.join(clean,'.opencode/plugin/openwolf/visibility.ts')));assert(!fs.existsSync(path.join(clean,'.grok/hooks')));
  assert(fs.readFileSync(path.join(wolf,'.gitignore'),'utf8').includes('activity/'));log.push('Clean tarball installation: Claude/Codex/OpenCode helpers and Grok compatibility present');
- const oldInstall=path.join(temp,'old-install');npm(['install','--prefix',oldInstall,'--ignore-scripts','--no-audit','--no-fund','openwolf@2.5.1']);
+ const oldInstall=path.join(temp,'old-install');npm(['install','--prefix',oldInstall,'--ignore-scripts','--no-audit','--no-fund','openwolf@2.5.2']);
  const oldCli=path.join(oldInstall,'node_modules/openwolf/dist/bin/openwolf.js'),upgrade=path.join(temp,'upgrade');initGit(upgrade);run(oldCli,['init','--agent','claude','codex','opencode'],upgrade);
  const oldWolf=path.join(upgrade,'.wolf'),settings=path.join(upgrade,'.claude/settings.json');const custom=JSON.parse(fs.readFileSync(settings));custom.statusLine={type:'command',command:'echo custom-status'};fs.writeFileSync(settings,JSON.stringify(custom));
  const memory='## Session: 2026-09-15\n\nUser memory survives upgrade.\n';fs.writeFileSync(path.join(oldWolf,'memory.md'),memory);
  const updateOutput=run(cli,['update','--project',upgrade],upgrade);assert(!updateOutput.includes('✗ Errors'),updateOutput);
- assert.equal(JSON.parse(fs.readFileSync(path.join(oldWolf,'hooks/runtime.json'))).version,'2.5.2');assert.equal(fs.readFileSync(path.join(oldWolf,'memory.md'),'utf8'),memory);
+ assert.equal(JSON.parse(fs.readFileSync(path.join(oldWolf,'hooks/runtime.json'))).version,'2.5.3');assert.equal(fs.readFileSync(path.join(oldWolf,'memory.md'),'utf8'),memory);
  assert.equal(JSON.parse(fs.readFileSync(settings)).statusLine.command,'echo custom-status');
- assert(fs.existsSync(path.join(upgrade,'.opencode/plugin/openwolf/visibility.ts')));log.push('Published 2.5.1 → packed 2.5.2 upgrade: memory/custom status preserved and plugin helpers refreshed');
+ assert(fs.existsSync(path.join(upgrade,'.opencode/plugin/openwolf/visibility.ts')));log.push('Published 2.5.2 → packed 2.5.3 upgrade: memory/custom status preserved and plugin helpers refreshed');
  const checkFile=path.join(temp,'checkpoint.json');fs.writeFileSync(checkFile,JSON.stringify({objective:'Release fixture',next_action:'Verify activity API'}));
  run(cli,['handoff','checkpoint','--agent','codex','--session','release-fixture','--file',checkFile],upgrade);
  const listen=net.createServer();await new Promise(r=>listen.listen(0,'127.0.0.1',r));const port=listen.address().port;await new Promise(r=>listen.close(r));
@@ -52,7 +52,8 @@ try{
   throw Error(`Daemon failed readiness (exit=${child.exitCode}, signal=${child.signalCode}): ${startupError??lastResponse}\n${output}`);
  };
  const stop=async()=>{if(!child||child.exitCode!==null||child.signalCode!==null)return;const exited=new Promise(r=>child.once('exit',r));child.kill('SIGTERM');await exited;child=undefined};
- const first=await start();assert(first.data.counts['checkpoint-saved']>=1);assert.equal(first.data.updates.installed,'2.5.2');assert.equal((await fetch(`http://127.0.0.1:${port}/api/activity`)).status,401);
+ const first=await start();assert(first.data.counts['checkpoint-saved']>=1);assert.equal(first.data.updates.installed,'2.5.3');assert.equal((await fetch(`http://127.0.0.1:${port}/api/activity`)).status,401);
+ const health=await fetch(`http://127.0.0.1:${port}/api/health`,{headers:{Authorization:'Bearer '+first.token}});assert(health.ok);assert.equal((await health.json()).version,'2.5.3');
  const project=await fetch(`http://127.0.0.1:${port}/api/project`,{headers:{Authorization:'Bearer '+first.token}});assert(project.ok);assert.equal((await project.json()).root,fs.realpathSync.native(upgrade));await stop();
  const second=await start();assert.equal(second.data.counts['checkpoint-saved'],first.data.counts['checkpoint-saved']);await stop();log.push('Authenticated dashboard, persistent activity and daemon restart verified');
  console.log(JSON.stringify({version:packed.version,files:packed.files.length,checks:log,temp},null,2));

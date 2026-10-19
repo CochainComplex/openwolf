@@ -7,7 +7,7 @@ import {hashText,sensitivePath} from '../hooks/handoff-state.js';
 import type {RepoSnapshot} from './types.js';
 export function repoSnapshot(root:string):RepoSnapshot {
   const identity=projectIdentity(root),gaps:string[]=[];
-  const git=(args:string[])=>execFileSync('git',['-c','core.fsmonitor=false',...(args[0]==='diff'?['diff','--no-ext-diff','--no-textconv',...args.slice(1)]:args)],{cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:3000,maxBuffer:16*1024*1024});
+  const git=(args:string[])=>execFileSync('git',['-c','core.fsmonitor=false',...(args[0]==='diff'?['diff','--no-ext-diff','--no-textconv',...args.slice(1)]:args)],{windowsHide:true,cwd:root,encoding:'utf8',stdio:['ignore','pipe','ignore'],timeout:3000,maxBuffer:16*1024*1024});
   let head:string|null=null,dirty_paths:string[]=[],diff='';
   try {
     head=git(['rev-parse','HEAD']).trim();
