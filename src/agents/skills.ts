@@ -27,6 +27,7 @@ const MANIFEST = path.join(".wolf", "skills-manifest.json");
 
 // sha256 (LF-normalised) of every skill template shipped before the manifest.
 const LEGACY_SHA256 = new Set([
+  "cd8a4ef51ac88aba2a84453836174d0b2291eb08476d8e7cdc24d3ed1fb984b4", // protocol correction from PR #138
   "17a75695be5d46294e88596323a0b3d31ba68cd8970bdfd7733312a53c6f7594", // reframe
   "e6f7e0b7337c9c86e74f6bf2e75110278e52be3d89703e22c2126b3433b1c6c1", // security-audit
   "fb5066aac6fd7e5ad49f7ccffa586ee8579ee9ae3160abd60627e9ab0832e841", // designqc
@@ -68,7 +69,8 @@ export function installSkills(projectRoot: string, templatesDir: string, agents:
   }
 
   const manifestPath = path.join(projectRoot, MANIFEST);
-  const manifest = readJSON<Record<string, string>>(manifestPath, {});
+  const loaded = readJSON<Record<string, string> | null>(manifestPath, {});
+  const manifest: Record<string, string> = loaded && typeof loaded === "object" && !Array.isArray(loaded) ? {...loaded} : {};
   const actions: string[] = [];
   // One line for all agents rather than one per agent: the skill set is
   // identical everywhere, and four near-identical lines pushed the useful

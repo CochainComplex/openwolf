@@ -14,13 +14,35 @@ import type { AgentAdapter, AgentInstallContext, AgentInstallResult } from "./ty
 // default {id, setup} definition. The selected output is based on the actual
 // OpenCode executable rather than on whether any config directory exists.
 
-const ENTRY = `// OpenWolf plugin entry — implementation lives in ./openwolf/.
+const LEGACY_ENTRY = `// OpenWolf plugin entry — implementation lives in ./openwolf/.
 import {OpenWolf as installed} from "./openwolf/index.js"
 import {pinRuntime, scheduleUpdate} from "./openwolf/runtime-updates.js"
 import {pathToFileURL} from "node:url"
 import * as path from "node:path"
 import type {Plugin} from "@opencode-ai/plugin"
 export const OpenWolf: Plugin = async (ctx) => {
+  scheduleUpdate(ctx.directory)
+  // The server's plugin instance remains fixed; no reload during a session.
+  let pkg: string | undefined
+  try { pkg = pinRuntime(ctx.directory, "opencode-server:" + process.pid + ":" + Date.now()) } catch {}
+  if (pkg) {
+    try {
+      const next = await import(pathToFileURL(path.join(pkg,"src/templates/opencode-plugin/index.ts")).href)
+      return await next.OpenWolf(ctx)
+    } catch {} // retain the installed plugin if the staged module cannot load
+  }
+  return installed(ctx)
+}
+`;
+const ENTRY = `// OpenWolf plugin entry — implementation lives in ./openwolf/.
+import {wolfDirExists} from "./openwolf/fs.js"
+import {OpenWolf as installed} from "./openwolf/index.js"
+import {pinRuntime, scheduleUpdate} from "./openwolf/runtime-updates.js"
+import {pathToFileURL} from "node:url"
+import * as path from "node:path"
+import type {Plugin} from "@opencode-ai/plugin"
+export const OpenWolf: Plugin = async (ctx) => {
+  if (!wolfDirExists(ctx.directory)) return {}
   scheduleUpdate(ctx.directory)
   // The server's plugin instance remains fixed; no reload during a session.
   let pkg: string | undefined
@@ -137,7 +159,7 @@ function removableFiles(target: string, source: string): string[] {
     return files;
   }
   const contents = fs.readFileSync(target, 'utf8').replace(/\r\n/g, '\n');
-  if (contents !== ENTRY && contents !== 'export { OpenWolf } from "./openwolf/index.js"\n') throw new Error(`Customized plugin entry: ${target}`);
+  if (contents !== ENTRY && contents !== LEGACY_ENTRY && contents !== 'export { OpenWolf } from "./openwolf/index.js"\n') throw new Error(`Customized plugin entry: ${target}`);
   return [target];
 }
 function removeOtherApiPlugins(projectRoot: string, api: OpenCodePluginApi, source: string): void {

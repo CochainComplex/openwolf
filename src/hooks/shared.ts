@@ -123,6 +123,10 @@ export function hookMain(hookName: string, fn: () => void | Promise<void>): void
     process.stdout.write(`ok ${hookName}`);
     process.exit(0);
   }
+  // Casepod: cached registrations must stay inert after disabling the project.
+  if (readJSON<{openwolf?: {enabled?: boolean}} | null>(path.join(getWolfDir(), "config.json"), null)?.openwolf?.enabled === false) {
+    process.exit(0);
+  }
   Promise.resolve()
     .then(() => readStdin())
     .then(async raw => {

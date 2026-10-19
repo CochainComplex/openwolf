@@ -1,3 +1,4 @@
+import {retireAiTasks} from "./cron-migration.js";
 import {withVisibilityStatusline} from './visibility-settings.js';
 import { claudePaths } from "./claude-paths.js";
 /**
@@ -146,6 +147,10 @@ async function updateProject(
 ): Promise<UpdateResult> {
   const { root, name } = project;
   const wolfDir = path.join(root, ".wolf");
+  if (readJSON<any>(path.join(wolfDir, "config.json"), {})?.openwolf?.enabled === false) {
+    return {project, status: "skipped", message: "OpenWolf is disabled; configuration and hooks left untouched"};
+  }
+
 
   // Validate project still exists
   if (!fs.existsSync(wolfDir)) {
@@ -172,6 +177,9 @@ async function updateProject(
   try {
     // 1. Create backup
     const backupDir = createBackup(wolfDir);
+    const retiredTasks=retireAiTasks(wolfDir);
+  if (retiredTasks) console.log(`    Archived ${retiredTasks} retired AI cron task(s); no model calls will run.`);
+
     console.log(`    ✓ Backup: ${path.basename(backupDir)}`);
 
     // 2. Update template files (OPENWOLF.md, config.json)

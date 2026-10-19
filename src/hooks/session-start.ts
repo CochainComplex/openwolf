@@ -1,3 +1,5 @@
+import {spawn} from "node:child_process";
+import {fileURLToPath} from "node:url";
 import {hookReceipt} from './visibility.js';
 import {activeContext} from "./handoff-state.js";
 import {updateNotice} from "./runtime-updates.js";
@@ -193,7 +195,7 @@ async function main(): Promise<void> {
   const sessionFile = getSessionFilePath(hookInput);
   const sessionId = hookInput.session_id ??
     `session-${now.toISOString().slice(0, 10)}-${String(now.getHours()).padStart(2, "0")}${String(now.getMinutes()).padStart(2, "0")}`;
-  gcSessionFiles();
+  // Session-file collection runs after context delivery in a separate process.
 
   // Hook install self-test (2.2): a missing dependency file once silently
   // killed a hook for 3 weeks across 440 invocations. Verify every installed
@@ -359,6 +361,16 @@ async function main(): Promise<void> {
       }));
     }
   } catch {}
+  try {
+    const cache = readJSON<{checked_at?: number}>(path.join(hooksDir, "_maintenance.json"), {});
+    if (Date.now() - (cache.checked_at ?? 0) > 24 * 3600_000) {
+      const child = spawn(process.execPath, [fileURLToPath(new URL("./session-maintenance.js", import.meta.url)), wolfDir], {
+        detached: true, windowsHide: true, stdio: "ignore",
+      });
+      child.on("error", () => {});
+      child.unref();
+    }
+  } catch {}
 }
 
 /**
@@ -372,6 +384,10 @@ function selfTestHooks(hooksDir: string): string[] {
   const problems: string[] = [];
   try {
     const files = fs.readdirSync(hooksDir).filter((f) => f.endsWith(".js"));
+    const signature = files.sort().map(f => {const st=fs.statSync(path.join(hooksDir,f));return `${f}:${st.size}:${st.mtimeMs}:${st.ctimeMs}`;}).join("|");
+    const cacheFile=path.join(hooksDir,"_health-cache.json");
+    const cache=readJSON<{signature?:string;problems?:string[]}>(cacheFile,{});
+    if(cache.signature===signature && Array.isArray(cache.problems))return cache.problems;
     for (const f of files) {
       let src = "";
       try {
@@ -386,6 +402,7 @@ function selfTestHooks(hooksDir: string): string[] {
         }
       }
     }
+    writeJSON(cacheFile,{signature,problems:[...new Set(problems)].slice(0,3)});
   } catch {}
   return [...new Set(problems)].slice(0, 3);
 }

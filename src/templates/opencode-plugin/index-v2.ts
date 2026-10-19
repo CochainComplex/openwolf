@@ -1,3 +1,4 @@
+import {wolfDirExists} from "./fs.js"
 import { pathToFileURL } from "node:url"
 import * as path from "node:path"
 import { pinRuntime, scheduleUpdate } from "./runtime-updates.js"
@@ -50,6 +51,7 @@ type V2Plugin = {
  */
 export async function setupOpenWolfV2(ctx: V2Context): Promise<(() => void) | void> {
   const directory = ctx.location.directory
+  if (!wolfDirExists(directory)) return
   const sessionKey = `opencode-server:${process.pid}:${Date.now()}`
   scheduleUpdate(directory)
 

@@ -34,6 +34,7 @@ const wolfDir = path.join(projectRoot, ".wolf");
 
 interface WolfConfig {
   openwolf: {
+    enabled?: boolean;
     daemon: { port: number; log_level: string };
     dashboard: { enabled: boolean; port: number; host?: string };
     cron: { enabled: boolean; heartbeat_interval_minutes: number };
@@ -41,6 +42,10 @@ interface WolfConfig {
 }
 
 const loadedConfig = readJSON<WolfConfig | null>(path.join(wolfDir,"config.json"),null);
+if (loadedConfig?.openwolf?.enabled === false) {
+  console.log('OpenWolf is disabled for this project; daemon not started.');
+  process.exit(0);
+}
 const config: WolfConfig = {openwolf:{
   daemon:{port:18790,log_level:"info",...loadedConfig?.openwolf?.daemon},
   dashboard:{enabled:true,port:18791,...loadedConfig?.openwolf?.dashboard},
