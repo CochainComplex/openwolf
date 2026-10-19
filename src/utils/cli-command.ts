@@ -13,6 +13,13 @@ export function cliCommand(name: 'pm2' | 'opencode', platform = process.platform
     const native = path.join(dir, `${name}.exe`);
     if (fs.existsSync(native)) return {file: native, args: []};
     if (!fs.existsSync(path.join(dir, `${name}.cmd`))) continue;
+    // V2 ships a native binary in @opencode/cli; newer V1 packages can too.
+    if (name === 'opencode') {
+      for (const pkg of ['@opencode/cli', 'opencode-ai']) {
+        const binary = path.join(dir, 'node_modules', pkg, 'bin', 'opencode.exe');
+        if (fs.existsSync(binary)) return {file: binary, args: []};
+      }
+    }
     const packageName = name === 'pm2' ? 'pm2' : 'opencode-ai';
     const entry = path.join(dir, 'node_modules', packageName, 'bin', name);
     if (fs.existsSync(entry)) return {file: process.execPath, args: [entry]};

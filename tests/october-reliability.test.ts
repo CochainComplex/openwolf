@@ -144,3 +144,13 @@ test('ordinary repeated edits do not demand invented bugs or new preferences',t=
   const state=JSON.parse(fs.readFileSync(file,'utf8'));
   assert.doesNotMatch(JSON.stringify(state.pending_reminders??[]),/edited 3\+|cerebrum.md hasn't been updated|Log the bug fixes/);
 });
+
+
+test('Windows OpenCode V2 npm shim launches the scoped native binary directly',t=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'ow-v2-cli-'));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  fs.writeFileSync(path.join(root,'opencode.cmd'),'@echo off');
+  const binary=path.join(root,'node_modules','@opencode','cli','bin','opencode.exe');
+  fs.mkdirSync(path.dirname(binary),{recursive:true});fs.writeFileSync(binary,'fixture');
+  assert.deepEqual(cliCommand('opencode','win32',{Path:root}),{file:binary,args:[]});
+});

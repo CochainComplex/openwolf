@@ -42,7 +42,10 @@ Do not import the project's application-specific database locks, payment tests, 
 
 ## Validation boundaries
 
-Local regression and package-smoke results are recorded in the repair PR. The initial native OpenCode was 1.18.31; the follow-up installation reports 1.19.3. Native V1 read/edit/read and single-turn-end tracking passed against a loopback mock model using the 2.5.3 candidate. The mock supplied deterministic calls; no external model was used. An explicitly installed V2 entry produced no OpenWolf activity on this binary, so its built-in V2 catalog is not evidence of external V2 plugin compatibility. The official npm registry did not provide `opencode-ai@2.0.22`, and the official GitHub `v2.0.32` release lookup returned 404 during this review. The V2 tests exercise the contributor's observed payload contract; their native E2E results remain contributor-reported, not independently repeated here. Windows behavior must also pass the repository's Windows CI; a macOS argument-array test is not native Windows certification.
+Native OpenCode **2.0.32** is now verified on macOS, using a private standalone server and a loopback mock model. The native runtime loaded the V2 plugin and exercised read → failed edit → successful edit → read. Checks verified raw-content read fingerprints, exclusion of the failed edit, one successful edit, one turn end, and five distinct usage records totaling the mock's 500 input / 50 output tokens. Disabled projects produced neither session nor usage records. These are integration checks with deterministic mock responses, not a live-provider model-quality or billing test.
+
+The previous 1.19.3 installation verified V1 only; its built-in V2 catalog did not load our external V2 fixture. The upgraded binary reports `opencode v2.0.32` and is distributed as `@opencode/cli`. This also exposed and fixed a Windows resolver gap: npm shims for that package now launch its native executable directly. Windows resolver coverage is in the cross-platform regression suite; the native V2 session test itself ran on macOS.
+
 
 A process-reaping race in an existing daemon test was corrected to await child exit instead of blocking the event loop for 300 ms. Sandbox socket restrictions were resolved by running daemon tests with loopback binding allowed. Neither test-environment limitation was relabeled as an application defect.
 
@@ -50,8 +53,20 @@ A process-reaping race in an existing daemon test was corrected to await child e
 ### Local verification on 19 October
 
 - `pnpm build`: passed, including plugin and dashboard type checks.
-- `pnpm test`: 365 passed, zero failed/skipped, including advisory-only task review and portable V2 ledger assertions.
+- `pnpm test`: 366 passed, zero failed/skipped, including advisory-only task review and portable V2 ledger assertions.
 - `scripts/release-smoke.mjs`: packed installation, actual published 2.5.2 → 2.5.3 upgrade, preserved custom status/memory, authenticated dashboard and daemon restart passed.
 - Minimal startup fixture: ten macOS/Node 24.14.1 executions, updates disabled, 28–31 ms (median 29 ms). This is not a representative Windows project benchmark or a before/after savings result.
 
-Cross-platform GitHub CI status is attached to the PR; native V2 availability remains as described above.
+Cross-platform GitHub CI status is attached to the PR.
+
+### Reproduce native V2 checks
+
+With OpenCode 2 installed, run from the repository root after building:
+
+```sh
+OPENWOLF_KEEP_RELEASE_FIXTURE=/tmp/openwolf-v2-fixture.json node scripts/release-smoke.mjs
+python3 scripts/opencode-v2-smoke.py /tmp/openwolf-v2-fixture.json
+python3 scripts/opencode-v2-smoke.py /tmp/openwolf-v2-fixture.json --disabled
+```
+
+The retained metadata points only to disposable package-test projects. The native script resets that fixture's `app.js`, installs the V2 adapter, isolates OpenCode data/configuration and uses a local HTTP model stub. It never requests an external model response. It checks actual OpenWolf session and usage files after the native process exits. The final invocation leaves the fixture disabled. The log is saved next to the metadata.
