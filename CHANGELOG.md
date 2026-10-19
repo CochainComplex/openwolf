@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — October reliability repairs
+## [2.5.3] - Unreleased — October reliability repairs
 
 - Keep source watchers alive on errors and apply scanner exclusions; repair Windows PM2/OpenCode shim execution and hide background Git windows.
 - Add OpenCode V2 support with safe migration, real-payload lifecycle tracking and per-step usage accounting.

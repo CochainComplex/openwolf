@@ -42,7 +42,7 @@ Do not import the project's application-specific database locks, payment tests, 
 
 ## Validation boundaries
 
-Local regression and package-smoke results are recorded in the repair PR. The native OpenCode installed here is 1.18.31. The official npm registry did not provide `opencode-ai@2.0.22`, and the official GitHub `v2.0.32` release lookup returned 404 during this review. The V2 tests exercise the contributor's observed payload contract; their native E2E results remain contributor-reported, not independently repeated here. Windows behavior must also pass the repository's Windows CI; a macOS argument-array test is not native Windows certification.
+Local regression and package-smoke results are recorded in the repair PR. The initial native OpenCode was 1.18.31; the follow-up installation reports 1.19.3. Native V1 read/edit/read and single-turn-end tracking passed against a loopback mock model using the 2.5.3 candidate. The mock supplied deterministic calls; no external model was used. An explicitly installed V2 entry produced no OpenWolf activity on this binary, so its built-in V2 catalog is not evidence of external V2 plugin compatibility. The official npm registry did not provide `opencode-ai@2.0.22`, and the official GitHub `v2.0.32` release lookup returned 404 during this review. The V2 tests exercise the contributor's observed payload contract; their native E2E results remain contributor-reported, not independently repeated here. Windows behavior must also pass the repository's Windows CI; a macOS argument-array test is not native Windows certification.
 
 A process-reaping race in an existing daemon test was corrected to await child exit instead of blocking the event loop for 300 ms. Sandbox socket restrictions were resolved by running daemon tests with loopback binding allowed. Neither test-environment limitation was relabeled as an application defect.
 
@@ -51,7 +51,7 @@ A process-reaping race in an existing daemon test was corrected to await child e
 
 - `pnpm build`: passed, including plugin and dashboard type checks.
 - `pnpm test`: 365 passed, zero failed/skipped, including advisory-only task review and portable V2 ledger assertions.
-- `scripts/release-smoke.mjs`: packed installation, actual published 2.5.1 upgrade, preserved custom status/memory, authenticated dashboard and daemon restart passed.
+- `scripts/release-smoke.mjs`: packed installation, actual published 2.5.2 → 2.5.3 upgrade, preserved custom status/memory, authenticated dashboard and daemon restart passed.
 - Minimal startup fixture: ten macOS/Node 24.14.1 executions, updates disabled, 28–31 ms (median 29 ms). This is not a representative Windows project benchmark or a before/after savings result.
 
 Cross-platform GitHub CI status is attached to the PR; native V2 availability remains as described above.
