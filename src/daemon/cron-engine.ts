@@ -311,7 +311,7 @@ export class CronEngine {
         const state = readJSON<{ git_head?: string | null }>(path.join(this.wolfDir, "_scan-state.json"), {});
         if (state.git_head) {
           const head = execFileSync("git", ["rev-parse", "HEAD"], {
-            cwd: this.projectRoot, encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"], timeout: 3000,
+            windowsHide: true, cwd: this.projectRoot, encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"], timeout: 3000,
           }).trim();
           if (head && head !== state.git_head) return false;
         }

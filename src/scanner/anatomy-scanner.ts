@@ -108,7 +108,7 @@ function isSensitiveFile(basename: string): boolean {
   return false;
 }
 
-function shouldExclude(
+export function shouldExclude(
   relPath: string,
   excludePatterns: string[]
 ): boolean {
@@ -322,7 +322,7 @@ export function buildMergedStore(
 }
 
 function currentHead(root: string): string | null {
-  try { return execFileSync("git", ["rev-parse", "HEAD"], {cwd:root,encoding:"utf8",stdio:["ignore","pipe","ignore"],timeout:3000}).trim(); } catch {return null;}
+  try { return execFileSync("git", ["rev-parse", "HEAD"], {windowsHide:true,cwd:root,encoding:"utf8",stdio:["ignore","pipe","ignore"],timeout:3000}).trim(); } catch {return null;}
 }
 export async function scanProject(wolfDir: string, projectRoot: string): Promise<number> {
   const initialHead = currentHead(projectRoot);

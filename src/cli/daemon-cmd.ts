@@ -1,3 +1,4 @@
+import { cliCommand } from "../utils/cli-command.js";
 import { waitDaemonReady } from "../utils/daemon-ready.js";
 import { daemonName } from "../utils/project-identity.js";
 import { execFileSync, execSync } from "node:child_process";
@@ -29,13 +30,17 @@ function getPm2Name(): string {
   return daemonName(projectRoot);
 }
 
-function pm2Bin(): string {
-  return isWindows() ? "pm2.cmd" : "pm2";
+function runPm2(args: string[], options: import("node:child_process").ExecFileSyncOptionsWithStringEncoding): string;
+function runPm2(args: string[], options?: import("node:child_process").ExecFileSyncOptions): string | Buffer;
+function runPm2(args: string[], options: import("node:child_process").ExecFileSyncOptions = {}): string | Buffer {
+  const command = cliCommand("pm2");
+  return execFileSync(command.file, [...command.args, ...args], {...options, windowsHide: true});
 }
 
 export function hasPm2(): boolean {
   try {
-    execFileSync(isWindows() ? "where" : "which", ["pm2"], { stdio: "ignore" });
+    if (isWindows()) cliCommand("pm2");
+    else execFileSync("which", ["pm2"], { stdio: "ignore" });
     return true;
   } catch {
     return false;
@@ -101,18 +106,19 @@ export async function daemonStart(): Promise<void> {
   const daemonScript = path.resolve(__dirname, "..", "daemon", "wolf-daemon.js");
 
   try {
-    execFileSync(pm2Bin(), ["start", daemonScript, "--name", name, "--cwd", projectRoot], {
+    runPm2(["start", daemonScript, "--name", name, "--cwd", projectRoot], {
       stdio: "inherit",
       env: { ...process.env, OPENWOLF_PROJECT_ROOT: projectRoot },
     });
-    execFileSync(pm2Bin(), ["save"], { stdio: "ignore" });
+    runPm2(["save"], { stdio: "ignore" });
     if (!await waitDaemonReady(projectRoot)) throw new Error("Daemon did not become ready for this project; inspect .wolf/daemon.log");
     console.log(`\n  ✓ Daemon started: ${name}`);
     if (isWindows()) {
       console.log("  Tip: Run 'pm2-windows-startup' for boot persistence.");
     }
-  } catch {
-    console.error("Failed to start daemon.");
+  } catch (error) {
+    console.error(`Failed to start daemon: ${String(error)}`);
+    process.exitCode = 1;
   }
 }
 
@@ -129,10 +135,11 @@ export function daemonStop(): void {
   if (hasPm2()) {
     const name = getPm2Name();
     try {
-      execFileSync(pm2Bin(), ["stop", name], { stdio: "ignore" });
+      runPm2(["stop", name], { stdio: "ignore" });
       console.log(`  ✓ Daemon stopped (PM2): ${name}`);
       return;
-    } catch {
+    } catch (error) {
+      console.error(`PM2 command failed: ${String(error)}`);
       // PM2 process not found — fall through to port-based stop
     }
   }
@@ -194,11 +201,12 @@ export async function daemonRestart(): Promise<void> {
   if (hasPm2()) {
     const name = getPm2Name();
     try {
-      execFileSync(pm2Bin(), ["restart", name], { stdio: "ignore" });
+      runPm2(["restart", name], { stdio: "ignore" });
       if (!await waitDaemonReady(projectRoot)) throw new Error("Restarted daemon did not become ready");
       console.log(`  ✓ Daemon restarted (PM2): ${name}`);
       return;
-    } catch {
+    } catch (error) {
+      console.error(`PM2 command failed: ${String(error)}`);
       // PM2 process not found — fall through
     }
   }
@@ -225,7 +233,7 @@ export function daemonStatus(): void {
 
   const name = getPm2Name();
   try {
-    const output = execFileSync(pm2Bin(), ["jlist"], { encoding: "utf-8" });
+    const output = runPm2(["jlist"], { encoding: "utf-8" });
     const processes = JSON.parse(output) as Array<{ name: string; pm2_env?: { status?: string } }>;
     const proc = processes.find((p) => p.name === name);
     if (proc) {
@@ -234,7 +242,11 @@ export function daemonStatus(): void {
       console.log(`  ${mark} Daemon ${name}: ${procStatus}`);
       return;
     }
-  } catch {}
+  } catch (error) {
+    console.error(`Unable to query PM2: ${String(error)}`);
+    process.exitCode = 1;
+    return;
+  }
   console.log(`  ✗ Daemon not running (${name}). Start with: openwolf daemon start`);
 }
 
@@ -254,8 +266,9 @@ export function daemonLogs(): void {
 
   const name = getPm2Name();
   try {
-    execFileSync(pm2Bin(), ["logs", name, "--lines", "50", "--nostream"], { stdio: "inherit" });
-  } catch {
-    console.error("Failed to get daemon logs.");
+    runPm2(["logs", name, "--lines", "50", "--nostream"], { stdio: "inherit" });
+  } catch (error) {
+    console.error(`Failed to get daemon logs: ${String(error)}`);
+    process.exitCode = 1;
   }
 }
