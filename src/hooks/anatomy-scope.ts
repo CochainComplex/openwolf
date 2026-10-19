@@ -143,6 +143,10 @@ export function anatomyReadEligible(root: string, relative: string): boolean {
   for (let i=1;i<=parts.length;i++) {
     const rel = parts.slice(0,i).join('/'), directory=i<parts.length;
     if (ignored?.(rel,directory) || directory && isVirtualenvDir(path.join(root,rel))) return false;
+    try {
+      const entry = fs.lstatSync(path.join(root, rel));
+      if (directory ? !entry.isDirectory() : !entry.isFile()) return false;
+    } catch { return false; }
   }
   try { return fs.statSync(path.join(root,relative)).size <= 1024*1024; } catch { return false; }
 }

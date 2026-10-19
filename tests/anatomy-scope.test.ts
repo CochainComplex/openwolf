@@ -15,6 +15,13 @@ test('scanner and read accounting agree on custom, nested ignore, generated and 
  const cases:[string,boolean][]=[['src/a.ts',true],['generated/a.ts',false],['ignored/a.ts',false],['nested/no.ts',false],['nested/keep.ts',true],['nested/local.ts',false],['.opencode/plugins/openwolf/index.ts',false],['bundle.js.map',false],['image.png',false],['custom-env/code.py',false]];
  write('custom-env/pyvenv.cfg','home = fixture');
  for(const [file] of cases)write(file,'export const a = 1;\n');
+ assert.equal(anatomyReadEligible(root,'src'),false,'directories are not indexed files');
+ if(process.platform!=='win32') {
+  fs.symlinkSync(path.join(root,'src/a.ts'),path.join(root,'linked.ts'));
+  fs.symlinkSync(path.join(root,'src'),path.join(root,'linked-dir'));
+  assert.equal(anatomyReadEligible(root,'linked.ts'),false,'scanner skips file symlinks');
+  assert.equal(anatomyReadEligible(root,'linked-dir/a.ts'),false,'scanner skips directory symlinks');
+ }
  const scan=await buildAnatomy(path.join(root,'.wolf'),root);
  for(const [i,[file,eligible]] of cases.entries()) {
   assert.equal(anatomyReadEligible(root,file),eligible,file);
