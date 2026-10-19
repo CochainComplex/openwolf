@@ -83,13 +83,22 @@ interface WolfToolInput {
 interface WolfModelRef {
   providerID?: string
   id?: string
+  sessionID?: string
 }
 
 export async function setupOpenWolfV2(ctx: WolfContext): Promise<() => Promise<void>> {
   const directory = ctx.location.directory
   const registrations: WolfRegistration[] = []
   const modelByMessage = new Map<string, WolfModelRef>()
+  const startedSessions = new Set<string>()
   let eventIterator: AsyncIterator<WolfEvent> | undefined
+  let stopped = false
+
+  const ensureSession = (sid: string) => {
+    if (startedSessions.has(sid)) return
+    startedSessions.add(sid)
+    handleSessionStart(directory, sid)
+  }
 
   const handleEvent = (ev: WolfEvent) => {
     if (!wolfDirExists(directory)) return
@@ -97,8 +106,10 @@ export async function setupOpenWolfV2(ctx: WolfContext): Promise<() => Promise<v
     const sid = data?.sessionID
     if (typeof sid !== "string" || !sid) return
 
+    if (ev.type !== "session.deleted") ensureSession(sid)
+
     if (ev.type === "session.created") {
-      handleSessionStart(directory, sid)
+      ensureSession(sid)
       scheduleUpdate(directory)
     }
 
@@ -109,6 +120,7 @@ export async function setupOpenWolfV2(ctx: WolfContext): Promise<() => Promise<v
         modelByMessage.set(assistantMessageID, {
           providerID: model.providerID,
           id: model.id,
+          sessionID: sid,
         })
       }
     }
@@ -128,17 +140,26 @@ export async function setupOpenWolfV2(ctx: WolfContext): Promise<() => Promise<v
       })
     }
 
+    if (ev.type === "session.step.failed") {
+      const assistantMessageID = data?.assistantMessageID
+      if (typeof assistantMessageID === "string") modelByMessage.delete(assistantMessageID)
+    }
+
     if (
       ev.type === "session.execution.succeeded" ||
       ev.type === "session.execution.failed" ||
       ev.type === "session.execution.interrupted" ||
       ev.type === "session.idle"
     ) {
+      for (const [mid, m] of modelByMessage) {
+        if (m.sessionID === sid) modelByMessage.delete(mid)
+      }
       scheduleUpdate(directory)
       handleStop(directory, sid)
     }
 
     if (ev.type === "session.deleted") {
+      startedSessions.delete(sid)
       handleStop(directory, sid)
       const file = sessionFilePath(path.join(getWolfDir(directory), "hooks"), sid)
       mutateJSON<Record<string, unknown>>(file, {}, HOOK_LOCK_BUDGET_MS, state => {
@@ -149,26 +170,48 @@ export async function setupOpenWolfV2(ctx: WolfContext): Promise<() => Promise<v
   }
 
   const startEventLoop = async () => {
-    try {
-      const iterator = ctx.event.subscribe()[Symbol.asyncIterator]()
+    const wait = (ms: number) =>
+      new Promise<void>(resolve => {
+        const t = setTimeout(resolve, ms)
+        ;(t as any).unref?.()
+      })
+    let backoff = 500
+    while (!stopped) {
+      let iterator: AsyncIterator<WolfEvent> | undefined
+      try {
+        iterator = ctx.event.subscribe()[Symbol.asyncIterator]()
+      } catch (error) {
+        console.warn("OpenWolf: event stream subscribe: " + error)
+      }
       eventIterator = iterator
-      for (;;) {
+      if (!iterator) {
+        await wait(backoff)
+        backoff = Math.min(backoff * 2, 30000)
+        continue
+      }
+      while (!stopped) {
         let step: IteratorResult<WolfEvent>
         try {
           step = await iterator.next()
         } catch (error) {
-          console.warn(`OpenWolf: event loop: ${error}`)
-          return
+          console.warn("OpenWolf: event stream read: " + error)
+          break
         }
-        if (step.done) return
+        if (step.done) {
+          console.warn("OpenWolf: event stream ended")
+          break
+        }
+        backoff = 500
         try {
           handleEvent(step.value)
         } catch (error) {
           console.warn(`OpenWolf: event: ${error}`)
         }
       }
-    } catch (error) {
-      console.warn(`OpenWolf: event loop: ${error}`)
+      eventIterator = undefined
+      if (stopped) return
+      await wait(backoff)
+      backoff = Math.min(backoff * 2, 30000)
     }
   }
 
@@ -178,6 +221,7 @@ export async function setupOpenWolfV2(ctx: WolfContext): Promise<() => Promise<v
       const i = hookInput as WolfToolInput
       const sid = i.sessionID
       if (!sid) return
+      ensureSession(sid)
       const args = (i.input ?? {}) as WolfToolArgs
       const toolName = i.tool
       const tool = (toolName ?? "").toLowerCase()
@@ -206,6 +250,7 @@ export async function setupOpenWolfV2(ctx: WolfContext): Promise<() => Promise<v
       const i = hookInput as WolfToolInput
       const sid = i.sessionID
       if (!sid) return
+      ensureSession(sid)
       if (i.status !== "completed") return
       const args = (i.input ?? {}) as WolfToolArgs
       const toolName = i.tool
@@ -261,6 +306,7 @@ export async function setupOpenWolfV2(ctx: WolfContext): Promise<() => Promise<v
         await reg.dispose()
       } catch {}
     }
+    stopped = true
     try {
       await eventIterator?.return?.()
     } catch {}
