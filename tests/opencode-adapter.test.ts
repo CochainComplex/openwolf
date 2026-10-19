@@ -70,3 +70,15 @@ describe("OpenCode adapter installation", { skip: !haveDist ? "dist not built" :
     assert.ok(result.warnings.some(warning => warning.includes("version could not be detected")));
   });
 });
+
+test('V2 migration preserves customized V1 content and does not install a second plugin', () => {
+  const ctx=project();
+  installOpenCodePlugin(ctx,'v1');
+  const old=path.join(ctx.projectRoot,'.opencode/plugin/openwolf');
+  fs.writeFileSync(path.join(old,'custom.ts'),'export const custom = true;');
+  const result=installOpenCodePlugin(ctx,'v2');
+  assert.ok(result.warnings.some(w=>w.includes('Customized')));
+  assert.ok(fs.existsSync(path.join(old,'index.ts')));
+  assert.ok(fs.existsSync(path.join(old,'custom.ts')));
+  assert.ok(!fs.existsSync(path.join(ctx.projectRoot,'.opencode/plugins/openwolf/index.ts')));
+});
