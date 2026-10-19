@@ -1,3 +1,6 @@
+// OpenCode 2 also loads this directory as a plugin and keeps one plugin per id.
+// A no-op default under its own id keeps it from failing or shadowing ../openwolf.ts.
+export default { id: "openwolf-lib", setup: () => {} }
 import {activityState,showActivityToast} from './visibility.js'
 import {scheduleUpdate, updateNotice} from "./runtime-updates.js"
 import { mutateJSON, HOOK_LOCK_BUDGET_MS } from "./anatomy-lock.js"

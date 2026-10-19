@@ -12,24 +12,29 @@ import type { AgentAdapter, AgentInstallContext, AgentInstallResult } from "./ty
 // module. The plugin maps OpenCode's native hooks (tool.execute.before/after,
 // session events) onto the same .wolf/ files the Claude/Codex hooks maintain.
 
-const ENTRY = `// OpenWolf plugin entry — implementation lives in ./openwolf/.
-import {OpenWolf as installed} from "./openwolf/index.js"
+// OpenCode 2 requires a default export {id, setup}; the v1 named-export entry
+// fails to load there ("Plugin must export a default").
+const ENTRY = `// OpenWolf plugin entry (OpenCode 2) — implementation lives in ./openwolf/.
+import {setupOpenWolfV2 as installed} from "./openwolf/v2.js"
 import {pinRuntime, scheduleUpdate} from "./openwolf/runtime-updates.js"
 import {pathToFileURL} from "node:url"
 import * as path from "node:path"
-import type {Plugin} from "@opencode-ai/plugin"
-export const OpenWolf: Plugin = async (ctx) => {
-  scheduleUpdate(ctx.directory)
-  // The server's plugin instance remains fixed; no reload during a session.
-  let pkg: string | undefined
-  try { pkg = pinRuntime(ctx.directory, "opencode-server:" + process.pid + ":" + Date.now()) } catch {}
-  if (pkg) {
-    try {
-      const next = await import(pathToFileURL(path.join(pkg,"src/templates/opencode-plugin/index.ts")).href)
-      return await next.OpenWolf(ctx)
-    } catch {} // retain the installed plugin if the staged module cannot load
-  }
-  return installed(ctx)
+export default {
+  id: "openwolf",
+  setup: async (ctx: any) => {
+    const directory: string = ctx.location.directory
+    scheduleUpdate(directory)
+    // The server's plugin instance remains fixed; no reload during a session.
+    let pkg: string | undefined
+    try { pkg = pinRuntime(directory, "opencode-server:" + process.pid + ":" + Date.now()) } catch {}
+    if (pkg) {
+      try {
+        const next = await import(pathToFileURL(path.join(pkg,"src/templates/opencode-plugin/v2.ts")).href)
+        return await next.setupOpenWolfV2(ctx)
+      } catch {} // retain the installed plugin if the staged module cannot load
+    }
+    return installed(ctx)
+  },
 }
 `;
 
