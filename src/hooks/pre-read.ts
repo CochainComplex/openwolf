@@ -1,3 +1,4 @@
+import {anatomyReadEligible} from './anatomy-scope.js';
 import {recordReceipt} from './visibility.js';
 import {detectAgent} from './shared.js';
 import * as crypto from "node:crypto";
@@ -244,7 +245,7 @@ async function main(): Promise<void> {
       }
     }
 
-    const indexable = !/^(?:\.claude\/worktrees|\.opencode\/plugin|node_modules|\.venv|venv|dist|build)(?:\/|$)/.test(relToProject) && !/\.(?:png|jpe?g|gif|pdf|zip|log)$/.test(relToProject);
+    const indexable = anatomyReadEligible(getProjectDir(), relToProject);
     if (indexable) {
       if (found) session.anatomy_hits++;
       else session.anatomy_misses++;

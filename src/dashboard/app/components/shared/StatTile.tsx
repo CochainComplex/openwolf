@@ -17,7 +17,7 @@ export function StatTile({ label, value, sub, variant = "default", accent, size 
   const cardClass = variant === "inverted" ? "wd-card-inverted" : "wd-card";
   const mutedColor = variant === "inverted" ? "color-mix(in srgb, var(--invert-text) 55%, transparent)" : "var(--text-muted)";
   return (
-    <div className={`${cardClass} p-5 flex flex-col justify-between gap-4 min-h-[132px]`}
+    <div className={`${cardClass} p-5 flex flex-col gap-4 min-h-[132px]`}
       style={variant === "outline" ? { background: "transparent", border: "1px solid var(--border)" } : undefined}>
       <div className="flex items-start justify-between gap-2">
         <span className="wd-label" style={{ color: mutedColor }}>{label}</span>

@@ -725,3 +725,23 @@ test('same session identifier in distinct projects initializes both project stat
     }
   } finally {first.cleanup();second.cleanup()}
 })
+
+test('V2 excluded reads remain tracked without counting an anatomy miss (#114)', async () => {
+  const project = makeTempProject(true)
+  let cleanup: (() => Promise<void>) | undefined
+  try {
+    const file = path.join(project.dir, '.cache', 'generated.ts')
+    fs.mkdirSync(path.dirname(file), { recursive: true })
+    fs.writeFileSync(file, 'export const generated = true\n')
+    const { ctx, toolHooks } = makeFakeCtx(project.dir)
+    cleanup = await setupOpenWolfV2(ctx)
+    await toolHooks.get('execute.before')!({ tool: 'read', sessionID: 'excluded-read', id: 'excluded-call', input: { path: file } })
+    const state = readSessionJSON(project.dir, 'excluded-read')
+    assert.equal(state?.anatomy_misses ?? 0, 0)
+    assert.equal(state?.anatomy_hits ?? 0, 0)
+    assert.ok(Object.keys(state?.files_read ?? {}).some(key => pathEntryMatches(key, file)))
+  } finally {
+    await cleanup?.()
+    project.cleanup()
+  }
+})

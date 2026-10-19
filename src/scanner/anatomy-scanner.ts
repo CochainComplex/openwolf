@@ -1,3 +1,5 @@
+import {shouldExclude, BINARY_EXTENSIONS} from '../hooks/anatomy-scope.js';
+export {shouldExclude} from '../hooks/anatomy-scope.js';
 import {recordReceipt} from '../hooks/visibility.js';
 import { createIgnoreMatcher } from "./exclusions.js";
 import * as fs from "node:fs";
@@ -33,18 +35,6 @@ interface WolfConfig {
   };
 }
 
-const BINARY_EXTENSIONS = new Set([
-  ".png", ".jpg", ".jpeg", ".gif", ".bmp", ".ico", ".svg",
-  ".woff", ".woff2", ".ttf", ".eot", ".otf",
-  ".zip", ".tar", ".gz", ".bz2", ".7z", ".rar",
-  ".exe", ".dll", ".so", ".dylib", ".bin",
-  ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
-  ".mp3", ".mp4", ".avi", ".mov", ".webm", ".ogg",
-  ".sqlite", ".db",
-  ".wasm",
-  ".lock",
-]);
-
 const CODE_EXTENSIONS = new Set([
   ".ts", ".js", ".tsx", ".jsx", ".py", ".rs", ".go", ".java",
   ".c", ".cpp", ".h", ".css", ".scss", ".sql", ".sh", ".yaml",
@@ -58,29 +48,6 @@ const PROSE_EXTENSIONS = new Set([".md", ".txt", ".rst", ".adoc"]);
 // (~92k tok), .DS_Store, and a phpunit cache — ~105k tokens of noise in one
 // index. Built in (not config) so existing installs are fixed without an
 // array-merge migration; users can still index nothing here worth indexing.
-const NOISE_BASENAMES = new Set([
-  "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "composer.lock",
-  "cargo.lock", "gemfile.lock", "poetry.lock", "uv.lock", "bun.lockb", "bun.lock",
-  ".ds_store", "thumbs.db", ".phpunit.result.cache", ".eslintcache", ".tsbuildinfo",
-]);
-const NOISE_SUFFIXES = [".min.js", ".min.css", ".map", ".cache", ".tsbuildinfo", ".pyc", ".snap"];
-const NOISE_DIRS = new Set([
-  "coverage", ".nyc_output", "__snapshots__", ".pytest_cache", ".mypy_cache", ".ruff_cache",
-  // Agent config surfaces: steering the model toward its own harness config
-  // via the index is noise (audit: .claude/*.md topped a project's importance
-  // ranking), and the agent already knows these files natively.
-  ".claude", ".codex", ".opencode", ".gemini", ".cursor", ".agents",
-]);
-
-function isNoiseFile(relPath: string): boolean {
-  const parts = relPath.split("/");
-  const basename = parts[parts.length - 1].toLowerCase();
-  if (NOISE_BASENAMES.has(basename)) return true;
-  if (NOISE_SUFFIXES.some((s) => basename.endsWith(s))) return true;
-  if (parts.some((p) => NOISE_DIRS.has(p.toLowerCase()))) return true;
-  return false;
-}
-
 function estimateTokens(text: string, filePath: string): number {
   const ext = path.extname(filePath).toLowerCase();
   let ratio = 3.75;
@@ -92,47 +59,6 @@ function estimateTokens(text: string, filePath: string): number {
 // Files that should never appear in anatomy (secrets, env files, keys).
 // Kept in sync with isSensitiveFile in src/hooks/shared.ts — hooks are
 // standalone scripts and cannot import from the scanner build (issue #54).
-const SENSITIVE_EXTENSIONS = new Set([
-  ".pem", ".key", ".p8", ".p12", ".pfx", ".keystore", ".jks", ".ppk", ".kdbx", ".tfstate",
-]);
-const SENSITIVE_BASENAMES = new Set([".npmrc", ".netrc", ".htpasswd", ".pgpass"]);
-
-function isSensitiveFile(basename: string): boolean {
-  const lower = basename.toLowerCase();
-  if (lower === ".env" || lower.startsWith(".env.")) return true;
-  if (SENSITIVE_BASENAMES.has(lower)) return true;
-  const dot = lower.lastIndexOf(".");
-  if (dot >= 0 && SENSITIVE_EXTENSIONS.has(lower.slice(dot))) return true;
-  if (/^id_(rsa|dsa|ecdsa|ed25519)/.test(lower)) return true;
-  if (lower.includes("credential") || /^secrets\.(json|ya?ml|toml)$/.test(lower)) return true;
-  return false;
-}
-
-export function shouldExclude(
-  relPath: string,
-  excludePatterns: string[]
-): boolean {
-  const parts = relPath.split("/");
-  const basename = parts[parts.length - 1];
-
-  // Always exclude sensitive files regardless of config
-  if (isSensitiveFile(basename)) return true;
-
-  // Always exclude generated/derived noise (lockfiles, caches, minified).
-  if (isNoiseFile(relPath)) return true;
-
-  for (const pattern of excludePatterns) {
-    // Simple glob: check if any path segment matches
-    if (pattern.startsWith("*.")) {
-      const ext = pattern.slice(1);
-      if (relPath.endsWith(ext)) return true;
-    } else {
-      if (parts.includes(pattern)) return true;
-    }
-  }
-  return false;
-}
-
 function walkDir(
   dir: string,
   rootDir: string,

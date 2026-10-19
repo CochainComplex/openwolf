@@ -96,6 +96,8 @@ export const HOOK_FILES = [
   "ledger-math.js",
   "shared.js",
   "task-review.js",
+  "anatomy-scope.js",
+  "ignore-runtime.js",
   "session-maintenance.js",
   "bug-index.js",
   "hook-attachments.js",

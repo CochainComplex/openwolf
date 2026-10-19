@@ -14,7 +14,7 @@ Agent support is different across products and versions. A registered hook is no
 | Grok Build | Enabled Claude-compatible discovery | Uses the existing registration. OpenWolf activity notices are dashboard-only. |
 | Cursor, Gemini CLI, Antigravity | Project instruction files | No full hook integration or equivalent usage coverage is claimed. |
 
-See [release validation](release-2.5.2.md) for the native versions that were checked.
+See [2.5.3 release validation](release-2.5.3.md) for OpenCode V2 checks and [2.5.2 validation](release-2.5.2.md) for earlier native integration results.
 
 ## What hooks do
 

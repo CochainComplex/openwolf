@@ -8,7 +8,7 @@ export function useTheme() {
       const stored = localStorage.getItem("openwolf-theme");
       if (stored === "light" || stored === "dark") return stored;
     }
-    return "dark";
+    return "light";
   });
 
   useEffect(() => {

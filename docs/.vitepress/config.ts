@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   title: "OpenWolf",
   description:
-    "Local project memory and context tools for coding agents. Continue saved work, find relevant code and review recorded token usage.",
+    "Keep useful project notes, find relevant files and continue saved work with your coding assistant. Review recorded activity in a local dashboard.",
   head: [
     ["link", { rel: "icon", type: "image/svg+xml", href: "/wolf.svg" }],
     ["link", { rel: "canonical", href: "https://openwolf.com" }],
@@ -46,7 +46,7 @@ export default defineConfig({
       {
         property: "og:description",
         content:
-          "Local project memory and context tools for coding agents. Continue saved work, find relevant code and review recorded token usage.",
+          "Keep useful project notes, find relevant files and continue saved work with your coding assistant. Review recorded activity in a local dashboard.",
       },
     ],
     // Twitter Card
@@ -63,7 +63,7 @@ export default defineConfig({
       {
         name: "twitter:description",
         content:
-          "Local project memory and context tools for coding agents. Continue saved work, find relevant code and review recorded token usage.",
+          "Keep useful project notes, find relevant files and continue saved work with your coding assistant. Review recorded activity in a local dashboard.",
       },
     ],
     // Additional SEO
@@ -122,6 +122,8 @@ export default defineConfig({
           { text: "Update & Restore", link: "/updating" },
           { text: "Troubleshooting", link: "/troubleshooting" },
           { text: "Operations", link: "/repair-operations" },
+          { text: "2.5.3 release checks", link: "/release-2.5.3" },
+          { text: "Contributors", link: "/contributors" },
           { text: "2.5.2 release checks", link: "/release-2.5.2" },
           { text: "Issue and contributor audit", link: "/audit/README" },
         ],
@@ -138,7 +140,7 @@ export default defineConfig({
       provider: "local",
     },
   },
-  appearance: "dark",
+  appearance: { initialValue: "light" },
   markdown: {
     lineNumbers: false,
   },

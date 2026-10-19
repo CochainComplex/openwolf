@@ -9,6 +9,9 @@
 - Archive retired AI cron definitions and catch up supported maintenance once after suspend/restart.
 - Correct memory instructions and dashboard wording; update untouched project skills and make reframe self-contained.
 - Offer optional task review nudges after repeated reported failures or elapsed active time, without blocking or terminating tasks.
+- Align eligible-read counters with scanner exclusions, including nested ignore rules, virtual environments and generated files (#114).
+- Reorganize the dashboard around project data; move activity, memory approval and system diagnostics into their own pages, report connection loss and distinguish daemon/runtime versions.
+- Default to light mode and rewrite the home page and upgrade documentation in plain language, with contributor credits.
 - Contributor authorship, reports, exclusions and validation limits: [October audit](docs/audit/october-2026.md).
 
 

@@ -53,7 +53,7 @@ A process-reaping race in an existing daemon test was corrected to await child e
 ### Local verification on 19 October
 
 - `pnpm build`: passed, including plugin and dashboard type checks.
-- `pnpm test`: 366 passed, zero failed/skipped, including advisory-only task review and portable V2 ledger assertions.
+- `pnpm test`: 369 passed, zero failed/skipped, including advisory-only task review and portable V2 ledger assertions.
 - `scripts/release-smoke.mjs`: packed installation, actual published 2.5.2 → 2.5.3 upgrade, preserved custom status/memory, authenticated dashboard and daemon restart passed.
 - Minimal startup fixture: ten macOS/Node 24.14.1 executions, updates disabled, 28–31 ms (median 29 ms). This is not a representative Windows project benchmark or a before/after savings result.
 
@@ -70,3 +70,11 @@ python3 scripts/opencode-v2-smoke.py /tmp/openwolf-v2-fixture.json --disabled
 ```
 
 The retained metadata points only to disposable package-test projects. The native script resets that fixture's `app.js`, installs the V2 adapter, isolates OpenCode data/configuration and uses a local HTTP model stub. It never requests an external model response. It checks actual OpenWolf session and usage files after the native process exits. The final invocation leaves the fixture disabled. The log is saved next to the metadata.
+
+### Dashboard and release follow-up
+
+@Noboxer’s #114 report exposed inconsistent anatomy coverage: files deliberately omitted by the scanner could count as misses when read. Scanner and hook eligibility now share exclusion, nested ignore, virtual-environment, binary and size rules. Regression tests cover standalone hooks and OpenCode V2. Historical counters remain unchanged.
+
+The dashboard now starts with project data. Activity history lives in Activity, memory approval and archives in Memory, and daemon/runtime versions and diagnostics in System. Provider usage and text-size estimates remain separate. Connection status follows the actual WebSocket; a deliberate disconnect does not reconnect. Light mode is the default. The home page uses plain language, documented integration limits and linked contributor credits.
+
+Local validation: 369 tests passed with no skips; build and documentation checks passed. The packed 2.5.3 upgrade from published 2.5.2 passed, including the daemon version endpoint. Native OpenCode 2.0.32 enabled and disabled fixtures passed again. Browser checks covered the home page, contributor section, project overview and System version display.

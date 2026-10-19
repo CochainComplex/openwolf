@@ -1,4 +1,4 @@
-import React, { useState, Suspense, lazy } from "react";
+import React, { useState, useEffect, Suspense, lazy } from "react";
 import { TopNav } from "./components/layout/TopNav.js";
 import { Layout } from "./components/layout/Layout.js";
 import { ErrorBoundary } from "./components/layout/ErrorBoundary.js";
@@ -29,7 +29,8 @@ function Skeleton() {
   );
 }
 
-const PANELS = ["overview", "activity", "tokens", "cron", "cerebrum", "handover", "memory", "anatomy", "bugs"];
+const SystemStatus = lazy(() => import("./components/panels/SystemStatus.js").then(m=>({default:m.SystemStatus})));
+const PANELS = ["system","overview", "activity", "tokens", "cron", "cerebrum", "handover", "memory", "anatomy", "bugs"];
 
 export default function App() {
   // Hash-based deep links: /#tokens opens the Tokens panel directly.
@@ -39,6 +40,7 @@ export default function App() {
     setActivePanelState(p);
     history.replaceState(null, "", `#${p}`);
   };
+  useEffect(()=>{const change=()=>{const p=location.hash.slice(1);if(PANELS.includes(p))setActivePanelState(p)};window.addEventListener("hashchange",change);return()=>window.removeEventListener("hashchange",change)},[]);
   const data = useWolfData();
   const { theme, toggleTheme } = useTheme();
 
@@ -75,6 +77,7 @@ export default function App() {
         activePanel={activePanel}
         onNavigate={setActivePanel}
         daemonStatus={data.health.status}
+        connected={data.connected}
         projectName={data.project.name || data.identity.name}
         agents={data.config.agents}
         theme={theme}
@@ -85,6 +88,7 @@ export default function App() {
             panel never poisons the ones you switch to. */}
         <ErrorBoundary key={activePanel} label={activePanel}>
         <Suspense fallback={<Skeleton />}>
+          {activePanel === "system" && <SystemStatus data={data} />}
           {activePanel === "overview" && <ProjectOverview data={data} />}
           {activePanel === "activity" && <ActivityTimeline data={data} />}
           {activePanel === "tokens" && <TokenUsage data={data} />}

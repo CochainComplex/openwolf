@@ -1,4 +1,4 @@
-import ignore from "ignore";
+export {DEFAULT_EXCLUDE_PATTERNS,isVirtualenvDir,createIgnoreMatcher} from '../hooks/anatomy-scope.js';
 import * as fs from "node:fs";
 import * as path from "node:path";
 
@@ -21,27 +21,6 @@ import * as path from "node:path";
  * failure than indexing a virtualenv. Virtualenvs under any name are caught by
  * isVirtualenvDir() below, and by .gitignore.
  */
-export const DEFAULT_EXCLUDE_PATTERNS: readonly string[] = [
-  // Node / JS
-  // Note: ".netlify" only. A bare "netlify" would exclude netlify/functions/,
-  // which is application source in every Netlify project.
-  "node_modules", "dist", "build", ".next", ".nuxt", ".turbo", ".vercel",
-  ".netlify", ".output", "coverage",
-  // Python
-  "__pycache__", ".venv", "venv", "site-packages", ".pytest_cache",
-  ".mypy_cache", ".ruff_cache", ".tox", "*.pyc",
-  // JVM / Android
-  ".gradle", "target", ".m2",
-  // Rust / Go / other build output
-  ".cargo",
-  // Tooling and editors
-  ".git", ".wolf", ".cache", ".vscode", ".idea",
-  // OS and editor droppings
-  ".DS_Store", "Thumbs.db",
-  // Generated assets
-  "*.min.js", "*.min.css", "*.map",
-];
-
 /**
  * Patterns added in 2.5.1 (#93).
  *
@@ -65,14 +44,6 @@ export const EXCLUDE_PATTERNS_ADDED_2_5_1: readonly string[] = [
  * `env/`, `.env-py311/`, `my-venv/` and anything else without guessing from
  * names. One stat per directory, only while walking.
  */
-export function isVirtualenvDir(dirPath: string): boolean {
-  try {
-    return fs.statSync(path.join(dirPath, "pyvenv.cfg")).isFile();
-  } catch {
-    return false;
-  }
-}
-
 // ─── .gitignore ─────────────────────────────────────────────────────────────
 //
 // A project's .gitignore is the list its author already wrote of what is not
@@ -167,26 +138,3 @@ export function isGitIgnored(rules: IgnoreRule[], relPath: string, isDirectory: 
 }
 
 /** Full nested Git-ignore semantics (#15, @VimCommando and @cdgriffith). */
-export function createIgnoreMatcher(root: string): (relative: string, directory: boolean) => boolean {
-  const cache = new Map<string, ReturnType<typeof ignore>>();
-  const rules = (dir: string) => {
-    if (!cache.has(dir)) {
-      let text = "";
-      try { text = fs.readFileSync(path.join(root, dir, ".gitignore"), "utf8"); } catch {}
-      cache.set(dir, ignore().add(text));
-    }
-    return cache.get(dir)!;
-  };
-  return (relative, directory) => {
-    const parts = relative.replace(/\\/g, "/").split("/");
-    let excluded = false;
-    for (let depth = 0; depth < parts.length; depth++) {
-      const base = parts.slice(0, depth).join("/");
-      const target = parts.slice(depth).join("/") + (directory ? "/" : "");
-      const result = rules(base).test(target);
-      if (result.ignored) excluded = true;
-      else if (result.unignored) excluded = false;
-    }
-    return excluded;
-  };
-}

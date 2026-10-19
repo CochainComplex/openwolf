@@ -21,7 +21,7 @@ try{
  const cli=path.join(install,'node_modules/openwolf/dist/bin/openwolf.js');assert.equal(run(cli,['--version'],temp).trim(),'2.5.3');
  const clean=path.join(temp,'clean');initGit(clean);run(cli,['init','--agent','claude','codex','opencode','grok'],clean);
  const wolf=path.join(clean,'.wolf');
- for(const f of ['visibility.js','visibility-statusline.js','handoff-state.js','update-worker.js','task-review.js','session-maintenance.js'])assert(fs.existsSync(path.join(wolf,'hooks',f)),f);
+ for(const f of ['visibility.js','visibility-statusline.js','handoff-state.js','update-worker.js','task-review.js','session-maintenance.js','anatomy-scope.js','ignore-runtime.js'])assert(fs.existsSync(path.join(wolf,'hooks',f)),f);
  assert.equal(JSON.parse(fs.readFileSync(path.join(wolf,'hooks/runtime.json'))).version,'2.5.3');
  assert(fs.existsSync(path.join(clean,'.opencode/plugin/openwolf/visibility.ts')));assert(!fs.existsSync(path.join(clean,'.grok/hooks')));
  assert(fs.readFileSync(path.join(wolf,'.gitignore'),'utf8').includes('activity/'));log.push('Clean tarball installation: Claude/Codex/OpenCode helpers and Grok compatibility present');
@@ -53,6 +53,7 @@ try{
  };
  const stop=async()=>{if(!child||child.exitCode!==null||child.signalCode!==null)return;const exited=new Promise(r=>child.once('exit',r));child.kill('SIGTERM');await exited;child=undefined};
  const first=await start();assert(first.data.counts['checkpoint-saved']>=1);assert.equal(first.data.updates.installed,'2.5.3');assert.equal((await fetch(`http://127.0.0.1:${port}/api/activity`)).status,401);
+ const health=await fetch(`http://127.0.0.1:${port}/api/health`,{headers:{Authorization:'Bearer '+first.token}});assert(health.ok);assert.equal((await health.json()).version,'2.5.3');
  const project=await fetch(`http://127.0.0.1:${port}/api/project`,{headers:{Authorization:'Bearer '+first.token}});assert(project.ok);assert.equal((await project.json()).root,fs.realpathSync.native(upgrade));await stop();
  const second=await start();assert.equal(second.data.counts['checkpoint-saved'],first.data.counts['checkpoint-saved']);await stop();log.push('Authenticated dashboard, persistent activity and daemon restart verified');
  console.log(JSON.stringify({version:packed.version,files:packed.files.length,checks:log,temp},null,2));

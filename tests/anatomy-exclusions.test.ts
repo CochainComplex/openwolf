@@ -12,7 +12,7 @@ import {
   parseGitignore,
   isGitIgnored,
   loadGitignore,
-} from "../src/scanner/exclusions.ts";
+} from "../dist/src/scanner/exclusions.js";
 
 // Issue #93 (krsfer): `openwolf init`'s default exclude_patterns missed .venv,
 // .gradle and .DS_Store, and the scanner carried a SHORTER fallback list, so

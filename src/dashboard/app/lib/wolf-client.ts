@@ -25,16 +25,21 @@ export class WolfClient {
   private handlers: MessageHandler[] = [];
   private reconnectTimer: number | null = null;
   private url: string;
+  private stopped = false;
+  private connectionHandler: (connected: boolean) => void;
 
-  constructor(url?: string) {
+  constructor(url?: string, onConnection: (connected: boolean) => void = () => {}) {
+    this.connectionHandler = onConnection;
     const wsProtocol = location.protocol === "https:" ? "wss:" : "ws:";
     const token = encodeURIComponent(getDashboardToken());
     this.url = url || `${wsProtocol}//${location.host}/ws?token=${token}`;
   }
 
   connect(): void {
+    this.stopped = false;
     try {
       this.ws = new WebSocket(this.url);
+      this.ws.onopen = () => this.connectionHandler(true);
       this.ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
@@ -42,18 +47,20 @@ export class WolfClient {
         } catch { /* ignore parse errors */ }
       };
       this.ws.onclose = () => {
+        this.connectionHandler(false);
         this.scheduleReconnect();
       };
       this.ws.onerror = () => {
         this.ws?.close();
       };
     } catch {
+      this.connectionHandler(false);
       this.scheduleReconnect();
     }
   }
 
   private scheduleReconnect(): void {
-    if (this.reconnectTimer) return;
+    if (this.stopped || this.reconnectTimer) return;
     this.reconnectTimer = window.setTimeout(() => {
       this.reconnectTimer = null;
       this.connect();
@@ -74,7 +81,10 @@ export class WolfClient {
   }
 
   disconnect(): void {
+    this.stopped = true;
+    this.connectionHandler(false);
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = null;
     this.ws?.close();
     this.ws = null;
   }
